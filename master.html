@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마스터 관리자 콘솔</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css"/>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --blue-dark: #1d4ed8;
+            --blue-soft: #eff6ff;
+            --blue-border: #bfdbfe;
+            --ink: #1e293b;
+            --sub: #64748b;
+            --line: #e5e9f0;
+            --bg-soft: #f8fafc;
+        }
+        * { font-family: 'Paperlogy', sans-serif !important; box-sizing: border-box; }
+        body { margin: 0; background: #ffffff; color: var(--ink); min-height: 100vh; font-weight: 400; }
+
+        /* 로그인 게이트 */
+        #loginGate { position: fixed; inset: 0; background: #f8fafc; z-index: 3000000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .admin-box { background: white; border: 1px solid var(--line); box-shadow: 0 4px 24px rgba(37,99,235,0.06); border-radius: 24px; padding: 34px; width: 100%; max-width: 440px; text-align: center; }
+        .pin-display { font-size: 2rem; font-weight: 600; letter-spacing: 8px; margin: 15px 0; color: var(--blue); height: 40px; }
+        .pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .pad-btn { background: #f8fafc; border: 1px solid var(--line); padding: 18px 4px; border-radius: 14px; font-size: 1.4rem; font-weight: 600; color: var(--ink); cursor: pointer; white-space: nowrap; display:flex; align-items:center; justify-content:center; }
+        .pad-btn:active { background: var(--blue-soft); border-color: var(--blue-border); }
+        .pad-btn.danger { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+
+        /* 레이아웃 */
+        #appShell { display: none; height: 100vh; }
+        .sidebar { width: 260px; background: #ffffff; color: var(--ink); display: flex; flex-direction: column; flex-shrink: 0; transition: margin-left 0.2s ease; border-right: 1px solid var(--line); }
+        .sidebar.collapsed { margin-left: -260px; }
+        .sidebar-header { padding: 24px 22px; font-size: 1.2rem; font-weight: 700; color: var(--blue); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 22px; color: var(--sub); cursor: pointer; font-weight: 500; font-size: 0.95rem; border-left: 3px solid transparent; }
+        .nav-item:hover { background: var(--blue-soft); color: var(--blue); }
+        .nav-item.active { background: var(--blue-soft); color: var(--blue); font-weight: 700; border-left: 3px solid var(--blue); }
+        .sidebar-footer { margin-top: auto; padding: 18px 22px; border-top: 1px solid var(--line); }
+        .logout-btn { background: #f8fafc; border: 1px solid var(--line); color: var(--sub); padding: 12px; border-radius: 12px; width: 100%; font-weight: 600; cursor: pointer; }
+        .logout-btn:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+
+        .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #ffffff; }
+        .topbar { display: flex; align-items: center; gap: 16px; padding: 18px 26px; background: white; border-bottom: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
+        .hamburger-btn { background: #f8fafc; border: 1px solid var(--line); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        .hamburger-btn span { width: 20px; height: 2px; background: var(--sub); border-radius: 2px; }
+        .topbar-title { font-size: 1.15rem; font-weight: 700; color: var(--ink); min-width: max-content; }
+        
+        /* 통합 검색 바 */
+        .global-search-box { flex: 1; max-width: 300px; display: flex; align-items: center; margin-left: 10px; }
+        .global-search-input { width: 100%; padding: 10px 14px; border: 1px solid var(--line); background: #f8fafc; border-radius: 12px; font-size: 0.9rem; font-weight: 500; outline: none; transition: border-color 0.2s, background 0.2s; }
+        .global-search-input:focus { border-color: var(--blue); background: white; }
+
+        .content-scroll { flex: 1; overflow-y: auto; padding: 26px; background: #ffffff; }
+        .view-page { display: none; }
+        .view-page.active { display: block; }
+
+        .card { background: white; border: 1px solid var(--line); border-radius: 20px; padding: 22px; margin-bottom: 18px; }
+        .card h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 14px; color: var(--ink); }
+        .card h4 { font-size: 0.95rem; font-weight: 600; margin: 18px 0 10px; color: var(--sub); }
+        .room-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .room-stat-card { background: #f8fafc; border-radius: 16px; padding: 18px; border: 1px solid var(--line); }
+        .room-stat-card .room-name { font-weight: 700; font-size: 1.05rem; color: var(--blue); margin-bottom: 10px; }
+        .mini-row { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--sub); padding: 4px 0; }
+        .mini-row b { color: var(--ink); font-weight: 600; }
+        .device-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+        .device-pill.online { background: #dcfce7; color: #15803d; }
+        .device-pill.offline { background: #fee2e2; color: #b91c1c; }
+        .conn-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .conn-dot.on { background: #22c55e; }
+        .conn-dot.off { background: #ef4444; }
+
+        .tab-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tab-btn { background: #f8fafc; border: 1px solid var(--line); padding: 10px 20px; border-radius: 12px; font-weight: 600; color: var(--sub); cursor: pointer; }
+        .tab-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+        .filter-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+        .filter-row select, .filter-row input[type="text"] { padding: 10px 14px; border: 1px solid var(--line); background: #f8fafc; border-radius: 12px; font-size: 0.9rem; }
+        .filter-row input[type="text"] { flex: 1; min-width: 180px; }
+
+        table.log-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        table.log-table th { background: #f8fafc; text-align: left; padding: 10px 12px; font-weight: 700; color: var(--sub); border-bottom: 1px solid var(--line); white-space: nowrap; }
+        table.log-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: var(--ink); }
+        table.log-table tr.unresolved { background: #fffbeb; }
+        table.log-table tr.clickable-row { cursor: pointer; }
+        table.log-table tr.clickable-row:hover { background: var(--blue-soft); }
+        .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+        .status-badge.st-pending { background: #fef9c3; color: #854d0e; }
+        .status-badge.st-done { background: #dcfce7; color: #15803d; }
+        .status-badge.st-absent { background: #fee2e2; color: #b91c1c; }
+
+        .btn { background: var(--blue); color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { background: var(--blue-dark); }
+        .btn.gray { background: #f8fafc; color: var(--sub); border: 1px solid var(--line); padding: 10px 16px; }
+        .btn.gray:hover { background: var(--blue-soft); color: var(--blue); border-color: var(--blue-border); }
+        .btn.danger { background: #ef4444; }
+        .btn.danger:hover { background: #dc2626; }
+
+        .input-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--sub); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid var(--line); background: #f8fafc; border-radius: 12px; margin-bottom: 12px; font-size: 0.95rem; }
+        .form-input:focus { outline: none; border-color: var(--blue); background: white; }
+        .list-box { border: 1px solid var(--line); border-radius: 14px; max-height: 320px; overflow-y: auto; background: #f8fafc; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 0.9rem; font-weight: 500; }
+        .list-item:last-child { border-bottom: none; }
+        .list-item.clickable { cursor: pointer; }
+        .list-item.clickable:hover { background: var(--blue-soft); }
+
+        .widget-row { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
+        .widget-row .wname { font-weight: 600; }
+        .widget-row .wctrls { display: flex; gap: 6px; }
+        .widget-row .wctrls button { background: white; border: 1px solid var(--line); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-weight: 700; color: var(--sub); }
+        .toggle-switch { position: relative; width: 46px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; inset: 0; background: #e2e8f0; border-radius: 26px; cursor: pointer; transition: 0.2s; }
+        .toggle-slider:before { content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        .maint-banner { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 14px 18px; border-radius: 14px; font-weight: 600; margin-bottom: 16px; display: none; }
+
+        /* 알림 토스트 */
+        #alertToastBox { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .alert-toast { background: white; color: var(--ink); padding: 14px 20px; border-radius: 14px; font-weight: 600; font-size: 0.9rem; border: 1px solid var(--line); border-left: 4px solid #ef4444; box-shadow: 0 8px 24px rgba(15,23,42,0.12); animation: toastIn 0.3s ease; }
+        @keyframes toastIn { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
+
+        /* 좌석 편집 스타일 */
+        .seat-edit-grid { display: grid; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+        .seat-edit-cell { border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; min-height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8fafc; }
+        .seat-edit-cell.filled { background: var(--blue-soft); border-color: var(--blue-border); }
+        .seat-edit-cell.empty { background: transparent; border: 1px dashed var(--line); cursor: pointer; color: #94a3b8; }
+        .seat-edit-cell b { font-size: 0.95rem; font-weight: 600; color: var(--ink); }
+        .seat-edit-cell .sub { font-size: 0.72rem; color: var(--sub); margin-top: 4px; }
+        .seat-btn-row { display: flex; gap: 4px; margin-top: 8px; justify-content: center; flex-wrap: wrap; }
+        .seat-btn-row button { font-size: 0.7rem; padding: 4px 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        /* 모달 */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 4000000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-card { background: white; border: 1px solid var(--line); box-shadow: 0 12px 40px rgba(15,23,42,0.15); border-radius: 24px; padding: 28px; max-width: 400px; width: 100%; }
+        .modal-btn-row { display: flex; gap: 8px; margin-top: 16px; }
+        .modal-btn-row .btn { flex: 1; }
+
+        /* 마이그레이션 화면 */
+        .migrate-drop { border: 2px dashed var(--blue-border); border-radius: 16px; padding: 30px; text-align: center; background: var(--blue-soft); margin-bottom: 16px; }
+        .migrate-step { display: flex; align-items: center; gap: 10px; padding: 10px 0; color: var(--sub); font-weight: 600; font-size: 0.9rem; }
+        .migrate-step .num { width: 24px; height: 24px; border-radius: 50%; background: #f1f5f9; color: var(--sub); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+        .migrate-step.done .num { background: #dcfce7; color: #15803d; }
+        .migrate-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 14px 0; }
+        .migrate-summary-card { background: #f8fafc; border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: center; }
+        .migrate-summary-card .num-big { font-size: 1.5rem; font-weight: 700; color: var(--blue); }
+        .migrate-summary-card .lbl { font-size: 0.78rem; color: var(--sub); margin-top: 4px; font-weight: 600; }
+        .progress-bar-track { width: 100%; height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; margin: 10px 0; }
+        .progress-bar-fill { height: 100%; background: var(--blue); border-radius: 6px; transition: width 0.2s ease; width: 0%; }
+        .room-status-badge { 
+            display: inline-block; 
+            padding: 6px 12px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+        .status-normal { background: #dcfce7; color: #15803d; }
+        .status-maintenance { background: #fed7aa; color: #92400e; }
+        .status-closed { background: #fee2e2; color: #991b1b; }
+
+    </style>
+</head>
+<body>
+
+<div id="loginGate">
+    <div class="admin-box" id="stepPin">
+        <h2 style="margin:0; color:#1e293b; font-size:1.4rem;" id="pinTitleText">마스터 관리자 인증</h2>
+        <div style="color:#64748b; margin:8px 0 10px; font-size:0.9rem;" id="pinSubtitle">비밀번호 6자리를 입력하세요.</div>
+        <div class="pin-display" id="pinStars"></div>
+        <div class="pad-grid">
+            <button class="pad-btn" onclick="pressPin('1')">1</button>
+            <button class="pad-btn" onclick="pressPin('2')">2</button>
+            <button class="pad-btn" onclick="pressPin('3')">3</button>
+            <button class="pad-btn" onclick="pressPin('4')">4</button>
+            <button class="pad-btn" onclick="pressPin('5')">5</button>
+            <button class="pad-btn" onclick="pressPin('6')">6</button>
+            <button class="pad-btn" onclick="pressPin('7')">7</button>
+            <button class="pad-btn" onclick="pressPin('8')">8</button>
+            <button class="pad-btn" onclick="pressPin('9')">9</button>
+            <button class="pad-btn danger" onclick="clearPin()">C</button>
+            <button class="pad-btn" onclick="pressPin('0')">0</button>
+            <button class="pad-btn" style="background:#e2e8f0; font-size:0.9rem;" onclick="location.reload()">취소</button>
+        </div>
+    </div>
+</div>
+
+<div id="appShell">
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">마스터 관리자</div>
+        <div class="nav-item active" data-view="overview" onclick="showView('overview')">대시보드</div>
+        <div class="nav-item" data-view="logs" onclick="showView('logs')">호출 로그</div>
+        <div class="nav-item" data-view="blacklist" onclick="showView('blacklist')">블랙리스트</div>
+        <div class="nav-item" data-view="studentdb" onclick="showView('studentdb')">학생 DB</div>
+        <div class="nav-item" data-view="seats" onclick="showView('seats')">좌석 배치 관리</div>
+        <div class="nav-item" data-view="notice" onclick="showView('notice')">공지사항 관리</div>
+        <div class="nav-item" data-view="ops" onclick="showView('ops')">운영 제어</div>
+        <div class="nav-item" data-view="backup" onclick="showView('backup')">데이터 백업</div>
+        <div class="nav-item" data-view="migrate" onclick="showView('migrate')">데이터 마이그레이션</div>
+        <div class="nav-item" data-view="firebase" onclick="showView('firebase')" style="color:#ef4444;">파이어베이스 관리</div>
+        <div class="nav-item" data-view="security" onclick="showView('security')">비밀번호 변경</div>
+        <div class="nav-item" data-view="search" style="display:none;">통합 검색 결과</div>
+        <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()">로그아웃</button></div>
+    </div>
+
+    <div class="main-area">
+        <div class="topbar">
+            <button class="hamburger-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+            <div class="topbar-title" id="topbarTitle">대시보드</div>
+            
+            <div class="global-search-box">
+                <input type="text" id="globalSearchInput" class="global-search-input" placeholder="통합 검색 (Enter)" onkeypress="if(event.key==='Enter') executeGlobalSearch()">
+            </div>
+
+            <div style="margin-left:auto; display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#64748b; font-weight:700;">
+                <span class="conn-dot" id="connDot"></span> <span id="connLabel">연결 확인 중...</span>
+            </div>
+        </div>
+
+        <div class="content-scroll">
+            <div class="maint-banner" id="maintBanner"></div>
+
+            <!-- 대시보드 개요 -->
+            <div class="view-page active" id="view-overview">
+                <div class="card">
+                    <h3>오늘의 운영 요약</h3>
+                    <div class="room-stat-grid" id="overviewRoomGrid"></div>
+                </div>
+                <div class="card">
+                    <h3>각 태블릿 기기 상태</h3>
+                    <div class="room-stat-grid" id="deviceStatusGrid"></div>
+                </div>
+                <div class="card">
+                    <h3>대시보드 위젯 편집</h3>
+                    <div id="widgetEditorBox"></div>
+                </div>
+            </div>
+
+            <!-- 호출 로그 -->
+            <div class="view-page" id="view-logs">
+                <div class="card">
+                    <div class="tab-row" id="gradeTabRow"></div>
+                    <div class="tab-row" id="roomTabRow"></div>
+                    <div class="filter-row">
+                        <select id="statusFilter" onchange="renderLogTable()">
+                            <option value="all">전체 상태</option>
+                            <option value="미출력">미출력만</option>
+                            <option value="출력 완료">출력 완료만</option>
+                            <option value="부재중 처리">부재중 처리만</option>
+                        </select>
+                        <select id="sortFilter" onchange="renderLogTable()">
+                            <option value="newest">최신순</option>
+                            <option value="oldest">오래된순</option>
+                        </select>
+                        <input type="text" id="logSearchInput" placeholder="학생명, 선생님, 목적으로 검색" oninput="renderLogTable()">
+                        <button class="btn gray" onclick="refreshLogTable()">🔄 새로고침</button>
+                        <button class="btn" onclick="downloadMasterCSV()">CSV 다운로드</button>
+                        <button class="btn danger" onclick="deleteSelectedLogs()">선택 삭제</button>
+                        <button class="btn danger" onclick="deleteAllLogs()">전체 삭제</button>
+                    </div>
+                    <div id="logCountLabel" style="font-size:0.85rem; font-weight:700; color:#2563eb; margin-bottom:10px;"></div>
+                    <div style="overflow-x:auto;">
+                        <table class="log-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">
+                                        <input type="checkbox" id="selectAllLogs" onchange="toggleSelectAllLogs()">
+                                    </th>
+                                    <th>날짜/시간</th>
+                                    <th>교무실</th>
+                                    <th>선생님</th>
+                                    <th>학번</th>
+                                    <th>이름</th>
+                                    <th>목적</th>
+                                    <th>상태</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 블랙리스트 -->
+            <div class="view-page" id="view-blacklist">
+                <div class="card">
+                    <h3>블랙리스트 관리 (전체 공유)</h3>
+                    <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                        <input type="text" id="mBlackId" class="form-input" placeholder="학번 5자리" style="margin:0; flex:1; min-width:120px;">
+                        <input type="text" id="mBlackName" class="form-input" placeholder="이름" style="margin:0; flex:1; min-width:100px;">
+                        <input type="date" id="mBlackStartDate" class="form-input" style="margin:0; flex:1; min-width:140px;">
+                        <input type="date" id="mBlackEndDate" class="form-input" style="margin:0; flex:1; min-width:140px;" placeholder="해제일 (비우면 영구)">
+                        <button class="btn danger" onclick="masterAddBlacklist()" style="white-space:nowrap;">차단 등록</button>
+                    </div>
+                    <div class="list-box" id="mBlacklistBox"></div>
+                </div>
+            </div>
+
+            <!-- 학생 DB -->
+            <div class="view-page" id="view-studentdb">
+                <div class="card">
+                    <h3>학생 데이터베이스 (전체 공유)</h3>
+                    <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                        <input type="text" id="mStudentId" class="form-input" placeholder="학번 5자리" style="margin:0; flex:1; min-width:120px;">
+                        <input type="text" id="mStudentName" class="form-input" placeholder="이름" style="margin:0; flex:1; min-width:100px;">
+                        <button class="btn" onclick="masterAddStudent()" style="white-space:nowrap;">등록</button>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="mStudentSearch" class="form-input" placeholder="검색" style="margin:0; flex:1; min-width:160px;" oninput="renderMasterStudentList()">
+                        <select id="mStudentSort" class="form-input" style="margin:0; width:140px;" onchange="renderMasterStudentList()">
+                            <option value="id">학번순</option>
+                            <option value="newest">최신 등록순</option>
+                            <option value="oldest">오래된 등록순</option>
+                        </select>
+                        <select id="mStudentGrade" class="form-input" style="margin:0; width:120px;" onchange="renderMasterStudentList()">
+                            <option value="all">전체 학년</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="3">3학년</option>
+                        </select>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:0.88rem; white-space:nowrap;">
+                            <input type="checkbox" id="mStudentSelectAll" onchange="toggleSelectAllStudents()"> 전체 선택
+                        </label>
+                        <button class="btn danger" onclick="masterDeleteSelectedStudents()">선택 삭제</button>
+                    </div>
+                    <div class="list-box" id="mStudentBox"></div>
+                </div>
+            </div>
+
+            <!-- 좌석 배치 관리 -->
+            <div class="view-page" id="view-seats">
+                <div class="card">
+                    <h3>교무실별 좌석 배치 관리</h3>
+                    <div class="tab-row" id="seatRoomTabRow"></div>
+                    <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap:wrap;">
+                        <div style="flex:1;"><span class="input-label">행(가로줄) 수</span><input type="number" id="masterSeatRowsInput" min="1" max="12" class="form-input" style="margin:0;"></div>
+                        <div style="flex:1;"><span class="input-label">열(세로줄) 수</span><input type="number" id="masterSeatColsInput" min="1" max="8" class="form-input" style="margin:0;"></div>
+                        <div style="flex:1; display:flex; align-items:flex-end;"><button class="btn" onclick="masterApplySeatGridSize()" style="margin:0; width:100%;">크기 적용</button></div>
+                    </div>
+                    <div id="masterSeatEditorGrid" class="seat-edit-grid"></div>
+                    <div id="masterSeatMoveHint" style="display:none; background:#eff6ff; color:#2563eb; font-weight:bold; padding:12px; border-radius:12px; text-align:center; margin-top:10px;">이동할 자리(또는 빈 칸)를 눌러주세요. 다시 누르면 취소됩니다.</div>
+                </div>
+            </div>
+
+            <!-- 공지사항 관리 -->
+            <div class="view-page" id="view-notice">
+                <div class="card">
+                    <h3>교무실별 공지 배너</h3>
+                    <div id="noticeEditorBox"></div>
+                </div>
+            </div>
+
+            <!-- 운영 제어 -->
+            <div class="view-page" id="view-ops">
+                <div class="card">
+                    <h3>교무실별 운영 상태</h3>
+                    <div style="color:var(--sub); font-size:0.88rem; margin-bottom:16px;">각 교무실 태블릿마다 운영 상태와 안내 문구를 따로 설정할 수 있고, 카드 안의 "자동 운영 종료 시간대"에서 몇 시부터 몇 시까지 자동으로 종료할지 범위로 지정할 수 있습니다.</div>
+                    <div id="opsRoomBox"></div>
+                </div>
+                <div class="card">
+                    <h3>태블릿 기기 강제 새로고침</h3>
+                    <div id="deviceReloadGrid" class="room-stat-grid"></div>
+                </div>
+            </div>
+
+            <!-- 데이터 백업 -->
+            <div class="view-page" id="view-backup">
+                <div class="card">
+                    <h3>전체 시스템 데이터 백업 및 복원</h3>
+                    <div style="color:#64748b; font-size:0.9rem; margin-bottom:14px;">전체 교무실의 좌석배치·공지·블랙리스트·학생DB를 한 번에 백업합니다.</div>
+                    <button class="btn" onclick="masterExportAll()" style="margin-bottom:10px;">전체 데이터 내보내기 (JSON)</button>
+                    <input type="file" id="masterImportFile" accept=".json" class="form-input">
+                    <button class="btn danger" onclick="masterImportAll()">백업 파일로 전체 복원</button>
+                </div>
+                <div class="card">
+                    <h3>교무실별 개별 백업</h3>
+                    <div id="roomBackupGrid" class="room-stat-grid"></div>
+                </div>
+            </div>
+
+            <!-- 데이터 마이그레이션 -->
+            <div class="view-page" id="view-migrate">
+                <div class="card">
+                    <h3>기존 서버 CSV 데이터 가져오기</h3>
+                    <div style="color:var(--sub); font-size:0.88rem; margin-bottom:16px;">기존 호출 시스템에서 내보낸 CSV 파일을 업로드하면, 호출 로그와 학생 정보를 이 시스템으로 옮길 수 있습니다.</div>
+
+                    <div class="migrate-step" id="mgStep1"><span class="num">1</span> CSV 파일 선택</div>
+                    <div class="migrate-step" id="mgStep2"><span class="num">2</span> 대상 교무실 선택</div>
+                    <div class="migrate-step" id="mgStep3"><span class="num">3</span> 미리보기 확인 후 가져오기</div>
+
+                    <div class="migrate-drop">
+                        <div style="font-weight:700; margin-bottom:10px; color:var(--ink);">CSV 파일을 선택하세요</div>
+                        <div style="font-size:0.82rem; color:var(--sub); margin-bottom:14px;">형식: 날짜/시간, 선생님, 학번, 이름, 목적, 사진여부, 상태 (헤더 없이 콤마로 구분된 파일)</div>
+                        <input type="file" id="mgFileInput" accept=".csv" class="form-input" style="margin:0 auto; max-width:320px;" onchange="mgHandleFile()">
+                    </div>
+
+                    <div id="mgRoomSelectBox" style="display:none;">
+                        <span class="input-label">이 로그들을 가져올 교무실</span>
+                        <select id="mgRoomSelect" class="form-input"></select>
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.88rem; color:var(--sub); margin:-4px 0 14px;">
+                            <input type="checkbox" id="mgAutoRegisterStudents" checked> 로그에 포함된 학생을 학생 DB에 자동으로 등록
+                        </label>
+                    </div>
+
+                    <div id="mgPreviewBox" style="display:none;">
+                        <div class="migrate-summary-grid" id="mgSummaryGrid"></div>
+                        <h4>미리보기 (최대 10건 표시)</h4>
+                        <div style="overflow-x:auto;">
+                            <table class="log-table">
+                                <thead><tr><th>날짜/시간</th><th>선생님</th><th>학번</th><th>이름</th><th>목적</th><th>상태</th></tr></thead>
+                                <tbody id="mgPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="mgErrorBox" style="margin-top:10px; color:#b91c1c; font-size:0.85rem; font-weight:600;"></div>
+                        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn" onclick="mgStartImport()">가져오기 시작</button>
+                            <button class="btn gray" onclick="mgReset()">취소</button>
+                        </div>
+                    </div>
+
+                    <div id="mgProgressBox" style="display:none;">
+                        <div class="progress-bar-track"><div class="progress-bar-fill" id="mgProgressFill"></div></div>
+                        <div id="mgProgressLabel" style="font-size:0.85rem; color:var(--sub); font-weight:600;"></div>
+                    </div>
+
+                    <div id="mgDoneBox" style="display:none;">
+                        <div class="maint-banner" style="display:block; background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
+                            ✓ 마이그레이션이 완료되었습니다.
+                        </div>
+                        <div class="migrate-summary-grid" id="mgDoneSummary"></div>
+                        <button class="btn gray" onclick="mgReset()">새 파일 가져오기</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 파이어베이스 관리 (위험 데이터 관리) -->
+            <div class="view-page" id="view-firebase">
+                <div class="card">
+                    <h3>파이어베이스 데이터 직접 관리</h3>
+                    <div class="maint-banner" style="display:block; background:#fef2f2; color:#b91c1c; border-color:#fecaca; margin-bottom: 20px;">
+                        ⚠ <b>경고</b>: 아래 버튼을 통해 삭제된 데이터는 복구할 수 없습니다. 신중하게 조작하세요.
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px; max-width: 450px;">
+                        <button class="btn danger" onclick="nukeFirebaseNode('logs')">전체 교무실 호출 로그 모두 비우기</button>
+                        <button class="btn danger" onclick="nukeFirebaseNode('students')">학생 DB 모두 비우기</button>
+                        <button class="btn danger" onclick="nukeFirebaseNode('blacklist')">블랙리스트 모두 비우기</button>
+                        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+                        <button class="btn danger" style="background:#7f1d1d;" onclick="nukeFirebaseNode('all')">시스템 전체 데이터 초기화 (Factory Reset)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 비밀번호 변경 -->
+            <div class="view-page" id="view-security">
+                <div class="card" style="max-width:500px;">
+                    <h3>마스터 관리자 비밀번호 변경</h3>
+                    <span class="input-label">현재 비밀번호 (6자리)</span>
+                    <input type="password" inputmode="numeric" id="secCurrentPw" class="form-input" placeholder="현재 비밀번호 6자리" maxlength="6">
+                    <span class="input-label">새 비밀번호 (6자리)</span>
+                    <input type="password" inputmode="numeric" id="secNewPw" class="form-input" placeholder="새 비밀번호 6자리" maxlength="6">
+                    <span class="input-label">새 비밀번호 확인</span>
+                    <input type="password" inputmode="numeric" id="secConfirmPw" class="form-input" placeholder="새 비밀번호 다시 입력" maxlength="6">
+                    <button class="btn danger" onclick="masterChangePassword()">비밀번호 변경</button>
+                    <div style="margin-top:12px; font-size:0.85rem; color:#64748b;">모든 교무실이 공통으로 사용하는 관리자 비밀번호입니다. 변경 즉시 다른 교무실 기기에도 적용됩니다.</div>
+                </div>
+            </div>
+
+            <!-- 통합 검색 결과 -->
+            <div class="view-page" id="view-search">
+                <div class="card">
+                    <h3>'<span id="searchKeywordLabel" style="color:#2563eb;"></span>' 통합 검색 결과</h3>
+                    
+                    <h4>호출 로그</h4>
+                    <div id="searchResultLogs" class="list-box"></div>
+                    
+                    <h4>학생 DB</h4>
+                    <div id="searchResultStudents" class="list-box"></div>
+                    
+                    <h4>블랙리스트</h4>
+                    <div id="searchResultBlacklist" class="list-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 좌석 편집 모달 -->
+<div class="modal-overlay" id="masterSeatEditModal">
+    <div class="modal-card">
+        <h3 id="masterSeatEditTitle" style="margin-bottom:16px; color:#1e293b; font-size:1.2rem; font-weight:800;">선생님 자리 추가</h3>
+        <span class="input-label">선생님 성함</span>
+        <input type="text" id="masterSeatNameInput" class="form-input" placeholder="예: 김선미">
+        <span class="input-label">담당 정보 (선택)</span>
+        <input type="text" id="masterSeatSubtitleInput" class="form-input" placeholder="예: 2-6 담임 · 국어" style="margin-bottom:0;">
+        <div class="modal-btn-row">
+            <button class="btn gray" onclick="closeMasterSeatModal()">취소</button>
+            <button class="btn" onclick="confirmMasterSeatModal()">저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- 알림 토스트 컨테이너 -->
+<div id="alertToastBox"></div>
+
+<!-- 파이어베이스 SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoWX2pA7BXPVmr6Zelnkq3OjZC96Z1uE4",
+      authDomain: "calling-a708e.firebaseapp.com",
+      databaseURL: "https://calling-a708e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "calling-a708e",
+      storageBucket: "calling-a708e.firebasestorage.app",
+      messagingSenderId: "418677588330",
+      appId: "1:418677588330:web:458f37a7a137795e22a513"
+    };
+
+    const HAS_FIREBASE_CONFIG = Boolean(
+      firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.databaseURL &&
+      firebaseConfig.projectId
+    );
+
+    if (!HAS_FIREBASE_CONFIG) {
+      const resetBanner = document.createElement('div');
+      resetBanner.style.position = 'fixed';
+      resetBanner.style.inset = '0';
+      resetBanner.style.background = '#f8fafc';
+      resetBanner.style.display = 'flex';
+      resetBanner.style.alignItems = 'center';
+      resetBanner.style.justifyContent = 'center';
+      resetBanner.style.fontSize = '1.4rem';
+      resetBanner.style.fontWeight = '800';
+      resetBanner.style.color = '#1e293b';
+      resetBanner.style.zIndex = '999999';
+      resetBanner.textContent = 'Firebase 설정이 비어 있습니다. 새 프로젝트의 firebaseConfig를 붙여넣고 다시 로드하세요.';
+      document.body.appendChild(resetBanner);
+      throw new Error('Firebase not configured. Paste a new firebaseConfig before reusing this app.');
+    }
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(()=>{});
+    const ADMIN_EMAIL = "master-admin@teacher-calling-system.local";
+
+    const ROOM_LIST = ["1학년 교무실", "2학년 교무실", "3학년 교무실", "본교무실"];
+    let inputtedPin = "";
+    let adminSetupDone = true;
+    let pinStage = 'login';
+    let pinFirstEntry = '';
+
+    // PIN 입력창 초기화
+    if (document.getElementById('pinStars')) {
+        document.getElementById('pinStars').innerText = '';
+    }
+
+    db.ref('shared/adminSetupDone').on('value', snap => { adminSetupDone = !!snap.val(); });
+
+    function pressPin(num) {
+        if (inputtedPin.length >= 6) return;
+        inputtedPin += num;
+        const starsEl = document.getElementById('pinStars');
+        if (starsEl) {
+            starsEl.innerText = "● ".repeat(inputtedPin.length).trim();
+        }
+        if (inputtedPin.length === 6) setTimeout(() => handlePinComplete(), 150);
+    }
+    function clearPin() {
+        inputtedPin = "";
+        const starsEl = document.getElementById('pinStars');
+        if (starsEl) {
+            starsEl.innerText = "";
+        }
+    }
+    
+    // 키보드 입력 지원
+    function setupPasswordKeyboardSupport() {
+        const loginGate = document.getElementById('loginGate');
+        if (!loginGate) return;
+        document.addEventListener('keydown', (e) => {
+            if (loginGate.style.display === 'none') return;
+            if (/^[0-9]$/.test(e.key)) { e.preventDefault(); pressPin(e.key); }
+            else if (e.key === 'Backspace') { e.preventDefault(); clearPin(); }
+            else if (e.key === 'Enter') { e.preventDefault(); if (inputtedPin.length === 6) handlePinComplete(); }
+        });
+    }
+    
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupPasswordKeyboardSupport);
+    else setupPasswordKeyboardSupport();
+
+    function updatePinPadUI() {
+        const title = document.getElementById('pinTitleText');
+        const subtitle = document.getElementById('pinSubtitle');
+        if (pinStage === 'setup_new') { title.innerText = '관리자 비밀번호 최초 설정'; subtitle.innerText = '숫자 6자리를 입력하세요.'; }
+        else if (pinStage === 'setup_confirm') { title.innerText = '비밀번호 확인'; subtitle.innerText = '방금 입력한 6자리를 다시 입력해주세요.'; }
+        else { title.innerText = '마스터 관리자 인증'; subtitle.innerText = '비밀번호 6자리를 입력하세요.'; }
+    }
+    async function handlePinComplete() {
+        const pin = inputtedPin;
+        if (pinStage === 'setup_new') { pinFirstEntry = pin; pinStage = 'setup_confirm'; updatePinPadUI(); clearPin(); return; }
+        if (pinStage === 'setup_confirm') {
+            if (pin !== pinFirstEntry) { alert('비밀번호가 서로 다릅니다.'); pinStage='setup_new'; updatePinPadUI(); clearPin(); return; }
+            try {
+                await auth.createUserWithEmailAndPassword(ADMIN_EMAIL, pin);
+                await db.ref('shared/adminSetupDone').set(true);
+                enterApp();
+            } catch (err) {
+                if (err.code === 'auth/email-already-in-use') { alert('이미 설정된 비밀번호가 있습니다. 로그인해주세요.'); pinStage='login'; updatePinPadUI(); clearPin(); }
+                else { alert('오류: ' + err.message); clearPin(); }
+            }
+            return;
+        }
+        try {
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin);
+            enterApp();
+        } catch (err) {
+            if (err.code === 'auth/user-not-found') { pinStage='setup_new'; updatePinPadUI(); clearPin(); return; }
+            alert('비밀번호가 올바르지 않습니다.');
+            clearPin();
+        }
+    }
+    pinStage = 'login';
+    setTimeout(() => { pinStage = adminSetupDone ? 'login' : 'setup_new'; updatePinPadUI(); }, 400);
+
+    function doLogout() { auth.signOut().catch(()=>{}); location.reload(); }
+
+    function enterApp() {
+        document.getElementById('loginGate').style.display = 'none';
+        document.getElementById('appShell').style.display = 'flex';
+        initApp();
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+    const VIEW_TITLES = {
+        overview: '대시보드', logs: '호출 로그', blacklist: '블랙리스트',
+        studentdb: '학생 DB', seats: '좌석 배치 관리', notice: '공지사항 관리',
+        ops: '운영 제어', backup: '데이터 백업', migrate: '데이터 마이그레이션', firebase: '파이어베이스 관리', 
+        security: '비밀번호 변경', search: '통합 검색 결과'
+    };
+    function showView(key) {
+        document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
+        const targetView = document.getElementById('view-' + key);
+        if (targetView) targetView.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => {
+            if (n.dataset.view) {
+                n.classList.toggle('active', n.dataset.view === key);
+            }
+        });
+        document.getElementById('topbarTitle').innerText = VIEW_TITLES[key] || '마스터 콘솔';
+        if (key === 'seats') renderMasterSeatEditor();
+        if (key === 'backup') renderRoomBackupButtons();
+        if (key === 'migrate') mgPopulateRoomSelect();
+        if (key === 'ops') renderOpsStatus();
+    }
+
+    // ===================== 통합 검색 기능 =====================
+    function executeGlobalSearch() {
+        const q = document.getElementById('globalSearchInput').value.trim().toLowerCase();
+        if(!q) return;
+        
+        document.getElementById('searchKeywordLabel').innerText = q;
+        showView('search');
+        
+        // 호출 로그 검색
+        const flatLogs = getAllCallsFlat();
+        const resLogs = flatLogs.filter(c => 
+            String(c.name||'').toLowerCase().includes(q) || 
+            String(c.id||'').includes(q) || 
+            String(c.teacher||'').toLowerCase().includes(q) || 
+            String(c.purpose||'').toLowerCase().includes(q)
+        );
+        document.getElementById('searchResultLogs').innerHTML = resLogs.length ? 
+            resLogs.map(c => `<div class="list-item clickable" onclick="goToLogFromSearch('${c.room}','${c.dbKey}')">
+                <span><b>[${c.room}]</b> ${c.time||''} | ${c.id} ${c.name} ➔ ${c.teacher||''} (${c.purpose||''})</span>
+                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
+            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 로그가 없습니다.</div>';
+        
+        // 학생 DB 검색
+        const resStudents = Object.entries(masterStudents).filter(([sid, val]) => 
+            sid.includes(q) || String(val.name||val).toLowerCase().includes(q)
+        );
+        document.getElementById('searchResultStudents').innerHTML = resStudents.length ? 
+            resStudents.map(([sid, val]) => `<div class="list-item clickable" onclick="goToStudentFromSearch('${sid}')">
+                <span><b>[${sid}]</b> ${val.name||val}</span>
+                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
+            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 학생이 없습니다.</div>';
+        
+        // 블랙리스트 검색
+        const resBlacklist = masterBlacklist.filter(b => 
+            String(b.id).includes(q) || String(b.name).toLowerCase().includes(q)
+        );
+        document.getElementById('searchResultBlacklist').innerHTML = resBlacklist.length ? 
+            resBlacklist.map(b => `<div class="list-item clickable" onclick="showView('blacklist')">
+                <span><b>[${b.id}]</b> ${b.name} (차단됨)</span>
+                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
+            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 블랙리스트 항목이 없습니다.</div>';
+    }
+
+    function goToLogFromSearch(room, dbKey) {
+        // 호출 로그 페이지로 이동하면서 해당 로그가 보이도록 필터 초기화
+        activeGradeTab = '전체';
+        activeRoomTab = '전체';
+        renderGradeTabs(); renderRoomTabs();
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('sortFilter').value = 'newest';
+        document.getElementById('logSearchInput').value = '';
+        showView('logs');
+        renderLogTable();
+        setTimeout(() => {
+            const rows = document.querySelectorAll('#logTableBody tr');
+            rows.forEach(tr => {
+                const cb = tr.querySelector('.log-check');
+                if (cb && cb.value === `${room}|${dbKey}`) {
+                    tr.style.outline = '2px solid var(--blue)';
+                    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => { tr.style.outline = 'none'; }, 2000);
+                }
+            });
+        }, 60);
+    }
+
+    function goToStudentFromSearch(sid) {
+        showView('studentdb');
+        document.getElementById('mStudentSearch').value = sid;
+        renderMasterStudentList();
+    }
+
+    // ===================== 파이어베이스 데이터 관리 =====================
+    function nukeFirebaseNode(type) {
+        if (type === 'logs') {
+            if(confirm('⚠️ 정말 모든 교무실의 호출 로그를 영구적으로 비우시겠습니까?')) {
+                const updates = {};
+                ROOM_LIST.forEach(r => updates[`rooms/${r}/calls`] = null);
+                db.ref().update(updates).then(() => {
+                    alert('모든 로그가 삭제되었습니다.');
+                    renderOverview();
+                }).catch(e => alert('오류: ' + e.message));
+            }
+        } else if (type === 'students') {
+            if(confirm('⚠️ 등록된 모든 학생 DB를 삭제하시겠습니까?')) {
+                db.ref('shared/students').remove().then(() => alert('학생 DB가 모두 삭제되었습니다.'));
+            }
+        } else if (type === 'blacklist') {
+            if(confirm('⚠️ 블랙리스트를 모두 비우시겠습니까?')) {
+                db.ref('shared/blacklist').remove().then(() => alert('블랙리스트가 모두 해제되었습니다.'));
+            }
+        } else if (type === 'all') {
+            if(confirm('🚨 [경고] 좌석배치, 공지, 로그, 학생정보 등 시스템의 모든 데이터를 삭제합니다. 진행하시겠습니까?')) {
+                if(prompt('확인을 위해 "초기화" 라고 정확히 입력해주세요.') === '초기화') {
+                    db.ref().remove().then(() => {
+                        alert('시스템 초기화가 완료되었습니다. 페이지를 새로고침합니다.');
+                        location.reload();
+                    }).catch(e => alert('오류: ' + e.message));
+                }
+            }
+        }
+    }
+
+    // ===================== 전역 데이터 =====================
+    let allRoomsData = {};
+    let roomSystemStatus = {}; // { [room]: { mode, message } }
+    let widgetConfig = [
+        { key: 'todaySummary', label: '오늘의 운영 요약', visible: true },
+        { key: 'deviceStatus', label: '각 태블릿 기기 상태', visible: true }
+    ];
+    let deviceOnlineState = {};
+    let masterBlacklist = [];
+    let masterStudents = {};
+
+    function initApp() {
+        db.ref('.info/connected').on('value', snap => {
+            const connected = snap.val() === true;
+            document.getElementById('connDot').className = 'conn-dot ' + (connected ? 'on' : 'off');
+            document.getElementById('connLabel').innerText = connected ? '파이어베이스 연결됨' : '연결 끊김';
+        });
+
+        ROOM_LIST.forEach(room => {
+            allRoomsData[room] = { calls: [], seatLayout: { rows:0, cols:0, seats:{} }, notice: {}, heartbeat: {}, settings: {} };
+            roomSystemStatus[room] = { mode: 'normal', message: '' };
+            
+            // 자동 종료 스케줄 로드
+            db.ref(`rooms/${room}/autoShutdownSchedule`).on('value', snap => {
+                const sch = snap.val();
+                if (sch) autoShutdownSchedules[room] = sch;
+                renderOpsStatus();
+            });
+            
+            db.ref(`rooms/${room}/calls`).on('value', snap => {
+                const callsObj = snap.val() || {};
+                allRoomsData[room].calls = Object.keys(callsObj).map(key => Object.assign({ dbKey: key }, callsObj[key]));
+                renderOverview(); renderLogTable();
+            });
+            db.ref(`rooms/${room}/seatLayout`).on('value', snap => {
+                allRoomsData[room].seatLayout = snap.val() || {rows:0,cols:0,seats:{}};
+                renderMasterSeatEditor();
+            });
+            db.ref(`rooms/${room}/notice`).on('value', snap => {
+                allRoomsData[room].notice = snap.val() || {text:'',size:'0.95rem',color:'#c2410c'};
+                renderNoticeEditor();
+            });
+            db.ref(`rooms/${room}/heartbeat`).on('value', snap => {
+                allRoomsData[room].heartbeat = snap.val() || {};
+                checkDeviceAlerts(room);
+                renderDeviceStatus();
+                renderDeviceReloadCards();
+            });
+            db.ref(`rooms/${room}/systemStatus`).on('value', snap => {
+                roomSystemStatus[room] = snap.val() || { mode: 'normal', message: '' };
+                renderOpsStatus();
+            });
+        });
+
+        db.ref('shared/blacklist').on('value', snap => { masterBlacklist = snap.val() || []; renderMasterBlacklist(); });
+        db.ref('shared/students').on('value', snap => { masterStudents = snap.val() || {}; renderMasterStudentList(); });
+        db.ref('shared/masterWidgetConfig').on('value', snap => {
+            const v = snap.val();
+            if (v && v.length) widgetConfig = v;
+            renderOverview(); renderWidgetEditor();
+        });
+
+        renderGradeTabs();
+        renderRoomTabs();
+        renderSeatRoomTabs();
+        setInterval(renderDeviceStatus, 15000);
+        
+        // 자동 운영 종료 스케줄 시작
+        initAutoShutdown();
+    }
+
+    function checkDeviceAlerts(room) {
+        const hb = allRoomsData[room]?.heartbeat || {};
+        const now = Date.now();
+        ['index', 'dashboard'].forEach(target => {
+            const key = `${room}_${target}`;
+            const wasOnline = deviceOnlineState[key];
+            const isOnline = hb[target] && (now - hb[target] < 60000);
+            if (wasOnline === true && !isOnline) showDeviceAlert(room, target === 'index' ? '학생용 화면' : '대시보드');
+            if (typeof isOnline === 'boolean') deviceOnlineState[key] = isOnline;
+        });
+    }
+    function showDeviceAlert(room, deviceLabel) {
+        const box = document.getElementById('alertToastBox');
+        const toast = document.createElement('div');
+        toast.className = 'alert-toast';
+        toast.innerText = `[오프라인] ${room} - ${deviceLabel} 연결 끊김`;
+        box.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    function parseToYYYYMMDD(str) {
+        if(!str) return "";
+        str = String(str).trim();
+        if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+        let m = str.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
+        if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+        let d = new Date(str);
+        if(!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return "";
+    }
+
+    function renderOverview() {
+        const grid = document.getElementById('overviewRoomGrid');
+        const showSummary = widgetConfig.find(w => w.key === 'todaySummary')?.visible !== false;
+        document.getElementById('overviewRoomGrid').closest('.card').style.display = showSummary ? 'block' : 'none';
+        if (!showSummary) return;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        grid.innerHTML = "";
+        ROOM_LIST.forEach(room => {
+            const calls = allRoomsData[room]?.calls || [];
+            const todayCalls = calls.filter(c => parseToYYYYMMDD(c.time || c.timestamp) === todayStr);
+            const teacherMap = {};
+            todayCalls.forEach(c => { if (c.teacher) teacherMap[c.teacher] = (teacherMap[c.teacher]||0)+1; });
+            let topTeacher = '-', maxC = 0;
+            for (let t in teacherMap) if (teacherMap[t] > maxC) { maxC = teacherMap[t]; topTeacher = t; }
+            const unresolved = todayCalls.filter(c => (c.status || '미출력') === '미출력').length;
+            const el = document.createElement('div');
+            el.className = 'room-stat-card';
+            el.innerHTML = `
+                <div class="room-name">${room}</div>
+                <div class="mini-row"><span>오늘 총 호출</span><b>${todayCalls.length}건</b></div>
+                <div class="mini-row"><span>최다 호출 교사</span><b>${topTeacher !== '-' ? topTeacher + ' (' + maxC + ')' : '-'}</b></div>
+                <div class="mini-row"><span>미처리 호출</span><b style="color:${unresolved > 0 ? '#dc2626' : '#15803d'};">${unresolved}건</b></div>
+            `;
+            grid.appendChild(el);
+        });
+    }
+
+    function renderDeviceStatus() {
+        const showDevice = widgetConfig.find(w => w.key === 'deviceStatus')?.visible !== false;
+        const card = document.getElementById('deviceStatusGrid').closest('.card');
+        card.style.display = showDevice ? 'block' : 'none';
+        if (!showDevice) return;
+        const grid = document.getElementById('deviceStatusGrid');
+        grid.innerHTML = "";
+        const now = Date.now();
+        ROOM_LIST.forEach(room => {
+            const hb = allRoomsData[room]?.heartbeat || {};
+            const idxOnline = hb.index && (now - hb.index < 60000);
+            const dashOnline = hb.dashboard && (now - hb.dashboard < 60000);
+            const el = document.createElement('div');
+            el.className = 'room-stat-card';
+            el.innerHTML = `
+                <div class="room-name">${room}</div>
+                <div class="mini-row"><span>학생용(index)</span><span class="device-pill ${idxOnline?'online':'offline'}">${idxOnline?'온라인':'오프라인'}</span></div>
+                <div class="mini-row"><span>대시보드</span><span class="device-pill ${dashOnline?'online':'offline'}">${dashOnline?'온라인':'오프라인'}</span></div>
+            `;
+            grid.appendChild(el);
+        });
+    }
+
+    function renderAutoShutdown() {
+        const box = document.getElementById('autoShutdownBox');
+        if (!box) return;
+        
+        const days = ['월', '화', '수', '목', '금', '토', '일'];
+        let html = '<div style="display: grid; gap: 14px;">';
+        
+        days.forEach((day, idx) => {
+            const dayKey = `shutdown_${idx}`;
+            const current = autoShutdownSettings[dayKey] || { enabled: false, time: '18:00' };
+            html += `
+                <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid var(--line);">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="shutdown_enable_${idx}" ${current.enabled ? 'checked' : ''} onchange="toggleShutdown(${idx})">
+                        <span style="min-width: 30px;">${day}요일</span>
+                    </label>
+                    <input type="time" id="shutdown_time_${idx}" value="${current.time}" style="flex: 1; padding: 8px; border: 1px solid var(--line); border-radius: 8px;" ${current.enabled ? '' : 'disabled'}>
+                    <button class="btn gray" style="font-size: 0.8rem; padding: 8px 12px;" onclick="saveShutdownSettings()">저장</button>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        box.innerHTML = html;
+    }
+
+    let autoShutdownSettings = {};
+    
+    function loadAutoShutdownSettings() {
+        db.ref('shared/autoShutdown').on('value', snap => {
+            autoShutdownSettings = snap.val() || {};
+            renderAutoShutdown();
+        });
+    }
+    
+    function toggleShutdown(dayIdx) {
+        const checkbox = document.getElementById(`shutdown_enable_${dayIdx}`);
+        const timeInput = document.getElementById(`shutdown_time_${dayIdx}`);
+        timeInput.disabled = !checkbox.checked;
+    }
+    
+    function saveShutdownSettings() {
+        const days = ['월', '화', '수', '목', '금', '토', '일'];
+        const settings = {};
+        days.forEach((_, idx) => {
+            const enabled = document.getElementById(`shutdown_enable_${idx}`).checked;
+            const time = document.getElementById(`shutdown_time_${idx}`).value;
+            settings[`shutdown_${idx}`] = { enabled, time };
+        });
+        db.ref('shared/autoShutdown').set(settings).then(() => {
+            alert('자동 운영 종료 설정이 저장되었습니다.');
+        });
+    }
+
+    function renderDeviceReloadCards() {
+        const grid = document.getElementById('deviceReloadGrid');
+        if (!grid) return;
+        grid.innerHTML = "";
+        ROOM_LIST.forEach(room => {
+            const el = document.createElement('div');
+            el.className = 'room-stat-card';
+            el.innerHTML = `
+                <div class="room-name">${room}</div>
+                <div class="mini-row" style="margin-top:8px;">
+                    <button class="btn gray" style="font-size:0.8rem; padding:8px 12px;" onclick="forceReloadDevice('${room}', 'index')">학생 화면 새로고침</button>
+                    <button class="btn gray" style="font-size:0.8rem; padding:8px 12px;" onclick="forceReloadDevice('${room}', 'dashboard')">대시보드 새로고침</button>
+                </div>
+            `;
+            grid.appendChild(el);
+        });
+    }
+    function forceReloadDevice(room, target) {
+        db.ref(`rooms/${room}/commands/${target}Reload`).set(Date.now());
+        alert(`${room} ${target === 'index' ? '학생 화면' : '대시보드'} 새로고침 명령을 전송했습니다.`);
+    }
+
+    function renderWidgetEditor() {
+        const box = document.getElementById('widgetEditorBox');
+        box.innerHTML = "";
+        widgetConfig.forEach((w, idx) => {
+            const row = document.createElement('div');
+            row.className = 'widget-row';
+            row.innerHTML = `
+                <span class="wname">${w.label}</span>
+                <div class="wctrls">
+                    <button onclick="moveWidget(${idx}, -1)">▲</button>
+                    <button onclick="moveWidget(${idx}, 1)">▼</button>
+                    <label class="toggle-switch"><input type="checkbox" ${w.visible!==false?'checked':''} onchange="toggleWidget(${idx}, this.checked)"><span class="toggle-slider"></span></label>
+                </div>
+            `;
+            box.appendChild(row);
+        });
+    }
+    function moveWidget(idx, dir) {
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= widgetConfig.length) return;
+        [widgetConfig[idx], widgetConfig[newIdx]] = [widgetConfig[newIdx], widgetConfig[idx]];
+        db.ref('shared/masterWidgetConfig').set(widgetConfig);
+    }
+    function toggleWidget(idx, checked) {
+        widgetConfig[idx].visible = checked;
+        db.ref('shared/masterWidgetConfig').set(widgetConfig);
+    }
+
+    // ===================== 호출 로그 =====================
+    let activeGradeTab = '전체';
+    let activeRoomTab = '전체';
+
+    function renderGradeTabs() {
+        const row = document.getElementById('gradeTabRow');
+        row.innerHTML = "";
+        ['전체', '1학년', '2학년', '3학년'].forEach(g => {
+            const b = document.createElement('button');
+            b.className = 'tab-btn' + (g === activeGradeTab ? ' active' : '');
+            b.innerText = g;
+            b.onclick = () => { activeGradeTab = g; renderGradeTabs(); renderLogTable(); };
+            row.appendChild(b);
+        });
+    }
+
+    function renderRoomTabs() {
+        const row = document.getElementById('roomTabRow');
+        row.innerHTML = "";
+        ['전체', ...ROOM_LIST].forEach(r => {
+            const b = document.createElement('button');
+            b.className = 'tab-btn' + (r === activeRoomTab ? ' active' : '');
+            b.innerText = r;
+            b.onclick = () => { activeRoomTab = r; renderRoomTabs(); renderLogTable(); };
+            row.appendChild(b);
+        });
+    }
+
+    function callGrade(room, call) {
+        if (room === '1학년 교무실') return '1학년';
+        if (room === '2학년 교무실') return '2학년';
+        if (room === '3학년 교무실') return '3학년';
+        const sid = String(call.id || '');
+        if (sid[0] === '1') return '1학년';
+        if (sid[0] === '2') return '2학년';
+        if (sid[0] === '3') return '3학년';
+        return '기타';
+    }
+
+    function getAllCallsFlat() {
+        let flat = [];
+        ROOM_LIST.forEach(room => {
+            (allRoomsData[room]?.calls || []).forEach(c => flat.push(Object.assign({ room }, c)));
+        });
+        return flat;
+    }
+
+    function getFilteredLogs() {
+        let flat = getAllCallsFlat();
+        if (activeGradeTab !== '전체') flat = flat.filter(c => callGrade(c.room, c) === activeGradeTab);
+        if (activeRoomTab !== '전체') flat = flat.filter(c => c.room === activeRoomTab);
+        const statusF = document.getElementById('statusFilter').value;
+        if (statusF !== 'all') flat = flat.filter(c => (c.status || '미출력') === statusF);
+        const searchQ = (document.getElementById('logSearchInput').value || '').trim().toLowerCase();
+        if (searchQ) {
+            flat = flat.filter(c =>
+                String(c.name||'').toLowerCase().includes(searchQ) ||
+                String(c.teacher||'').toLowerCase().includes(searchQ) ||
+                String(c.purpose||'').toLowerCase().includes(searchQ) ||
+                String(c.id||'').includes(searchQ)
+            );
+        }
+        const sortF = document.getElementById('sortFilter').value;
+        flat.sort((a,b) => sortF === 'oldest' ? (a.timestamp||0)-(b.timestamp||0) : (b.timestamp||0)-(a.timestamp||0));
+        return flat;
+    }
+
+    function renderLogTable() {
+        const flat = getFilteredLogs();
+        document.getElementById('logCountLabel').innerText = `${flat.length}개의 로그`;
+        const body = document.getElementById('logTableBody');
+        
+        document.getElementById('selectAllLogs').checked = false;
+
+        body.innerHTML = flat.map(c => {
+            const st = c.status || '미출력';
+            const unresolvedClass = st === '미출력' ? 'unresolved' : '';
+            const stClass = st === '출력 완료' ? 'st-done' : (st === '부재중 처리' ? 'st-absent' : 'st-pending');
+            return `<tr class="${unresolvedClass}">
+                <td style="text-align: center;"><input type="checkbox" class="log-check" value="${c.room}|${c.dbKey}"></td>
+                <td>${c.time || ''}</td><td>${c.room}</td><td>${c.teacher||''}</td><td>${c.id||''}</td><td>${c.name||''}</td><td>${c.purpose||''}</td>
+                <td><span class="status-badge ${stClass}">${st}</span></td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:30px;">조건에 맞는 로그가 없습니다.</td></tr>`;
+    }
+
+    function refreshLogTable() {
+        renderLogTable();
+        // 시각적 피드백
+        const btn = document.querySelector('#view-logs .filter-row button.btn.gray');
+        if (btn) {
+            const oldText = btn.innerText;
+            btn.innerText = "✓ 완료";
+            setTimeout(() => { btn.innerText = oldText; }, 800);
+        }
+    }
+
+    function toggleSelectAllLogs() {
+        const checked = document.getElementById('selectAllLogs').checked;
+        document.querySelectorAll('.log-check').forEach(cb => { cb.checked = checked; });
+    }
+
+    function deleteSelectedLogs() {
+        const checkedBoxes = [...document.querySelectorAll('.log-check:checked')];
+        if (checkedBoxes.length === 0) { alert('삭제할 로그를 선택해주세요.'); return; }
+        if (!confirm(`선택한 ${checkedBoxes.length}개의 로그를 삭제하시겠습니까?`)) return;
+
+        const updates = {};
+        checkedBoxes.forEach(cb => {
+            const [room, dbKey] = cb.value.split('|');
+            updates[`rooms/${room}/calls/${dbKey}`] = null;
+        });
+        db.ref().update(updates).then(() => { document.getElementById('selectAllLogs').checked = false; })
+        .catch(err => alert("삭제 중 오류가 발생했습니다: " + err.message));
+    }
+
+    function deleteAllLogs() {
+        const flat = getFilteredLogs();
+        if (flat.length === 0) { alert('삭제할 로그가 없습니다.'); return; }
+        if (!confirm(`현재 목록에 있는 ${flat.length}개의 로그를 전부 삭제하시겠습니까?\n(필터가 적용되어 있다면 화면에 보이는 항목만 삭제됩니다)`)) return;
+
+        const updates = {};
+        flat.forEach(c => {
+            if (c.room && c.dbKey) updates[`rooms/${c.room}/calls/${c.dbKey}`] = null;
+        });
+        db.ref().update(updates).then(() => { document.getElementById('selectAllLogs').checked = false; })
+        .catch(err => alert("삭제 중 오류가 발생했습니다: " + err.message));
+    }
+
+    function downloadMasterCSV() {
+        const flat = getFilteredLogs();
+        if (flat.length === 0) { alert('다운로드할 로그가 없습니다.'); return; }
+        let csv = "\uFEFF날짜/시간,교무실,선생님,학번,이름,목적,상태\n";
+        flat.forEach(c => {
+            csv += [c.time||'', c.room, c.teacher||'', c.id||'', c.name||'', c.purpose||'', c.status||'미출력']
+                .map(v => `"${String(v).replace(/"/g,'""')}"`).join(",") + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `전체교무실_호출로그_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(link); link.click(); link.remove();
+    }
+
+    // ===================== 블랙리스트 / 학생 DB =====================
+    function renderMasterBlacklist() {
+        const box = document.getElementById('mBlacklistBox');
+        if (!box) return;
+        if (masterBlacklist.length === 0) { box.innerHTML = '<div class="list-item">차단된 학생이 없습니다.</div>'; return; }
+        box.innerHTML = masterBlacklist.map((b, idx) => {
+            const periodStr = b.endDate ? `${b.startDate || ''}~${b.endDate}` : (b.period || '영구 차단');
+            return `<div class="list-item"><span>[${b.id}] ${b.name} (${periodStr})</span><button class="btn gray" onclick="masterLiftBlacklist(${idx})">해제</button></div>`;
+        }).join('');
+    }
+    function masterAddBlacklist() {
+        const id = document.getElementById('mBlackId').value.trim();
+        const name = document.getElementById('mBlackName').value.trim();
+        const startDate = document.getElementById('mBlackStartDate').value;
+        const endDate = document.getElementById('mBlackEndDate').value;
+        if (id.length !== 5 || isNaN(id)) { alert('학번 5자리를 입력하세요.'); return; }
+        if (!name) { alert('이름을 입력하세요.'); return; }
+        masterBlacklist.push({ id, name, startDate, endDate });
+        db.ref('shared/blacklist').set(masterBlacklist);
+        document.getElementById('mBlackId').value = '';
+        document.getElementById('mBlackName').value = '';
+        document.getElementById('mBlackStartDate').value = '';
+        document.getElementById('mBlackEndDate').value = '';
+    }
+    function masterLiftBlacklist(idx) {
+        masterBlacklist.splice(idx, 1);
+        db.ref('shared/blacklist').set(masterBlacklist);
+    }
+
+    function renderMasterStudentList() {
+        const box = document.getElementById('mStudentBox');
+        if (!box) return;
+        const q = (document.getElementById('mStudentSearch').value || '').trim().toLowerCase();
+        const grade = (document.getElementById('mStudentGrade')?.value || 'all');
+        const sortMode = (document.getElementById('mStudentSort')?.value || 'id');
+
+        let entries = Object.entries(masterStudents).map(([sid, val]) => {
+            if (typeof val === 'object' && val !== null) return { sid, name: val.name || '', createdAt: val.createdAt || 0 };
+            return { sid, name: String(val), createdAt: 0 };
+        });
+
+        if (q) entries = entries.filter(e => e.sid.includes(q) || e.name.toLowerCase().includes(q));
+        if (grade !== 'all') entries = entries.filter(e => e.sid[0] === grade);
+
+        if (sortMode === 'id') entries.sort((a,b) => parseInt(a.sid)-parseInt(b.sid));
+        else if (sortMode === 'newest') entries.sort((a,b) => b.createdAt - a.createdAt);
+        else entries.sort((a,b) => a.createdAt - b.createdAt);
+
+        if (entries.length === 0) { box.innerHTML = '<div class="list-item">등록된 학생이 없습니다.</div>'; return; }
+        box.innerHTML = entries.map(e =>
+            `<div class="list-item">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" class="student-check" value="${e.sid}">
+                    <span>[${e.sid}] ${e.name}</span>
+                </label>
+                <button class="btn gray" onclick="masterDeleteStudent('${e.sid}')">삭제</button>
+            </div>`
+        ).join('');
+    }
+    function toggleSelectAllStudents() {
+        const checked = document.getElementById('mStudentSelectAll').checked;
+        document.querySelectorAll('.student-check').forEach(cb => { cb.checked = checked; });
+    }
+    function masterDeleteSelectedStudents() {
+        const checked = [...document.querySelectorAll('.student-check:checked')].map(cb => cb.value);
+        if (checked.length === 0) { alert('삭제할 학생을 선택해주세요.'); return; }
+        if (!confirm(`선택한 ${checked.length}명을 삭제할까요?`)) return;
+        const updates = {};
+        checked.forEach(sid => { updates[sid] = null; });
+        db.ref('shared/students').update(updates);
+        document.getElementById('mStudentSelectAll').checked = false;
+    }
+    function masterAddStudent() {
+        const id = document.getElementById('mStudentId').value.trim();
+        const name = document.getElementById('mStudentName').value.trim();
+        if (id.length !== 5 || isNaN(id)) { alert('학번 5자리를 입력하세요.'); return; }
+        if (!name) { alert('이름을 입력하세요.'); return; }
+        db.ref(`shared/students/${id}`).set({ name, createdAt: Date.now() });
+        document.getElementById('mStudentId').value = '';
+        document.getElementById('mStudentName').value = '';
+    }
+    function masterDeleteStudent(sid) {
+        if (confirm(`학번 ${sid} 학생 정보를 삭제할까요?`)) db.ref(`shared/students/${sid}`).remove();
+    }
+
+    // ===================== 좌석 배치 편집 =====================
+    let activeSeatRoom = ROOM_LIST[0];
+    let masterSeatMoveSourceKey = null;
+    let masterSeatEditTargetKey = null;
+
+    function renderSeatRoomTabs() {
+        const row = document.getElementById('seatRoomTabRow');
+        row.innerHTML = "";
+        ROOM_LIST.forEach(r => {
+            const b = document.createElement('button');
+            b.className = 'tab-btn' + (r === activeSeatRoom ? ' active' : '');
+            b.innerText = r;
+            b.onclick = () => { activeSeatRoom = r; renderSeatRoomTabs(); renderMasterSeatEditor(); };
+            row.appendChild(b);
+        });
+    }
+
+    function renderMasterSeatEditor() {
+        const layout = allRoomsData[activeSeatRoom]?.seatLayout || { rows:0, cols:0, seats:{} };
+        const grid = document.getElementById('masterSeatEditorGrid');
+        if (!grid) return;
+        const rowsInput = document.getElementById('masterSeatRowsInput');
+        const colsInput = document.getElementById('masterSeatColsInput');
+        if (rowsInput) rowsInput.value = layout.rows || 0;
+        if (colsInput) colsInput.value = layout.cols || 0;
+
+        if (!layout.rows) { grid.innerHTML = '<div style="color:#94a3b8;">아직 설정된 자리가 없습니다. 행/열 수를 입력하고 크기 적용을 누르세요.</div>'; return; }
+        grid.style.gridTemplateColumns = `repeat(${layout.cols}, minmax(110px, 1fr))`;
+        grid.innerHTML = "";
+
+        for (let r = 0; r < layout.rows; r++) {
+            for (let c = 0; c < layout.cols; c++) {
+                const key = `${r}_${c}`;
+                const seat = (layout.seats||{})[key];
+                const filled = !!(seat && seat.name);
+                const cell = document.createElement('div');
+                cell.className = 'seat-edit-cell' + (filled ? ' filled' : ' empty') + (masterSeatMoveSourceKey === key ? ' selected' : '');
+
+                if (filled) {
+                    cell.innerHTML = `
+                        <b>${seat.name}</b>
+                        ${seat.subtitle ? `<div class="sub">${seat.subtitle}</div>` : ''}
+                        <div class="seat-btn-row">
+                            <button style="background:#e0f2fe;color:#0369a1;" onclick="event.stopPropagation(); masterOpenSeatModal('${key}')">수정</button>
+                            <button style="background:#f1f5f9;color:#334155;" onclick="event.stopPropagation(); masterStartMoveSeat('${key}')">이동</button>
+                            <button style="background:#fee2e2;color:#ef4444;" onclick="event.stopPropagation(); masterDeleteSeat('${key}')">삭제</button>
+                        </div>`;
+                } else { cell.innerHTML = `<div>+ 추가</div>`; }
+
+                cell.addEventListener('click', () => {
+                    if (masterSeatMoveSourceKey) {
+                        if (masterSeatMoveSourceKey !== key) masterMoveSeatTo(key);
+                        else { masterSeatMoveSourceKey = null; renderMasterSeatEditor(); }
+                        return;
+                    }
+                    if (!filled) masterOpenSeatModal(key);
+                });
+                grid.appendChild(cell);
+            }
+        }
+        document.getElementById('masterSeatMoveHint').style.display = masterSeatMoveSourceKey ? 'block' : 'none';
+    }
+
+    function masterApplySeatGridSize() {
+        const rows = Math.max(1, Math.min(12, parseInt(document.getElementById('masterSeatRowsInput').value) || 1));
+        const cols = Math.max(1, Math.min(8, parseInt(document.getElementById('masterSeatColsInput').value) || 1));
+        const cur = allRoomsData[activeSeatRoom]?.seatLayout || { seats: {} };
+        const newSeats = {};
+        Object.keys(cur.seats || {}).forEach(key => {
+            const [r, c] = key.split('_').map(Number);
+            if (r < rows && c < cols) newSeats[key] = cur.seats[key];
+        });
+        db.ref(`rooms/${activeSeatRoom}/seatLayout`).set({ rows, cols, seats: newSeats });
+    }
+
+    function masterOpenSeatModal(key) {
+        masterSeatEditTargetKey = key;
+        const cur = (allRoomsData[activeSeatRoom]?.seatLayout?.seats || {})[key] || { name: '', subtitle: '' };
+        document.getElementById('masterSeatEditTitle').innerText = cur.name ? '선생님 자리 수정' : '선생님 자리 추가';
+        document.getElementById('masterSeatNameInput').value = cur.name || '';
+        document.getElementById('masterSeatSubtitleInput').value = cur.subtitle || '';
+        document.getElementById('masterSeatEditModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('masterSeatNameInput').focus(), 50);
+    }
+    function closeMasterSeatModal() { document.getElementById('masterSeatEditModal').style.display = 'none'; masterSeatEditTargetKey = null; }
+    function confirmMasterSeatModal() {
+        const name = document.getElementById('masterSeatNameInput').value.trim();
+        if (!name) { alert('선생님 성함을 입력해주세요.'); return; }
+        const subtitle = document.getElementById('masterSeatSubtitleInput').value.trim();
+        const layout = allRoomsData[activeSeatRoom]?.seatLayout || { rows:0, cols:0, seats:{} };
+        if (!layout.seats) layout.seats = {};
+        layout.seats[masterSeatEditTargetKey] = { name, subtitle };
+        db.ref(`rooms/${activeSeatRoom}/seatLayout`).set(layout);
+        closeMasterSeatModal();
+    }
+    function masterDeleteSeat(key) {
+        const layout = allRoomsData[activeSeatRoom]?.seatLayout;
+        if (!layout || !layout.seats[key]) return;
+        if (!confirm(`[${layout.seats[key].name}] 자리를 삭제할까요?`)) return;
+        delete layout.seats[key];
+        db.ref(`rooms/${activeSeatRoom}/seatLayout`).set(layout);
+    }
+    function masterStartMoveSeat(key) { masterSeatMoveSourceKey = key; renderMasterSeatEditor(); }
+    function masterMoveSeatTo(destKey) {
+        const layout = allRoomsData[activeSeatRoom]?.seatLayout;
+        if (!layout) return;
+        const src = layout.seats[masterSeatMoveSourceKey];
+        if (!src) { masterSeatMoveSourceKey = null; renderMasterSeatEditor(); return; }
+        const dest = layout.seats[destKey];
+        const newSeats = { ...layout.seats };
+        if (dest) newSeats[masterSeatMoveSourceKey] = dest; else delete newSeats[masterSeatMoveSourceKey];
+        newSeats[destKey] = src;
+        layout.seats = newSeats;
+        masterSeatMoveSourceKey = null;
+        db.ref(`rooms/${activeSeatRoom}/seatLayout`).set(layout);
+    }
+
+    // ===================== 공지 / 운영 / 백업 =====================
+    function renderNoticeEditor() {
+        const box = document.getElementById('noticeEditorBox');
+        if (!box) return;
+        box.innerHTML = "";
+        ROOM_LIST.forEach(room => {
+            const notice = allRoomsData[room]?.notice || { text: '', size: '0.95rem', color: '#c2410c' };
+            const wrap = document.createElement('div');
+            wrap.style.marginBottom = '18px';
+            wrap.innerHTML = `
+                <span class="input-label">${room}</span>
+                <input type="text" class="form-input" id="notice_${room}" value="${(notice.text||'').replace(/"/g,'&quot;')}" placeholder="공지 내용 (비우면 배너가 사라집니다)">
+                <button class="btn" onclick="saveNotice('${room}')">이 교무실에 반영</button>
+            `;
+            box.appendChild(wrap);
+        });
+    }
+    function saveNotice(room) {
+        const text = document.getElementById('notice_' + room).value;
+        db.ref(`rooms/${room}/notice`).set({ text, size: '0.95rem', color: '#c2410c' });
+        alert(`${room} 공지사항이 반영되었습니다.`);
+    }
+
+    const OPS_LABEL_MAP = { normal: '정상 운영 중', maintenance: '점검 중', closed: '운영 종료' };
+    let autoShutdownSchedules = {}; // { [room]: { startHour, startMin, endHour, endMin, enabled } }
+
+    function initAutoShutdown() {
+        // 매분 체크해서 시간이 되면 자동으로 운영 종료/재개
+        setInterval(() => {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMin = now.getMinutes();
+            
+            ROOM_LIST.forEach(room => {
+                const sch = autoShutdownSchedules[room];
+                if (!sch || !sch.enabled) return;
+                
+                const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
+                const isInShutdownPeriod = (currentHour > sch.startHour || (currentHour === sch.startHour && currentMin >= sch.startMin)) &&
+                                         (currentHour < sch.endHour || (currentHour === sch.endHour && currentMin < sch.endMin));
+                
+                if (isInShutdownPeriod && cur.mode !== 'closed') {
+                    // 운영 종료 시간이므로 상태를 closed로 변경
+                    cur.mode = 'closed';
+                    cur.message = cur.message || '운영 시간이 종료되었습니다.';
+                    db.ref(`rooms/${room}/systemStatus`).set(cur);
+                } else if (!isInShutdownPeriod && cur.mode === 'closed' && (cur.message || '').includes('운영 시간')) {
+                    // 운영 시간이 다시 시작되므로 상태를 normal로 변경
+                    cur.mode = 'normal';
+                    cur.message = '';
+                    db.ref(`rooms/${room}/systemStatus`).set(cur);
+                }
+            });
+        }, 60000); // 1분마다 체크
+    }
+
+    function renderOpsStatus() {
+        const box = document.getElementById('opsRoomBox');
+        if (!box) return;
+        
+        box.innerHTML = '';
+        
+        // ============== 모든 기기 일괄 제어 섹션 ==============
+        let bulkControlHTML = `
+            <div class="card" style="margin-bottom:20px; background:linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border:2px solid #bfdbfe;">
+                <h3 style="color:#0c4a6e; font-size:1.15rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.3rem;">🎛️</span> 모든 기기 일괄 제어
+                </h3>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
+                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #bfdbfe;">
+                        <div style="font-size:0.75rem; color:#0284c7; font-weight:700; margin-bottom:6px;">모든 기기</div>
+                        <button class="btn gray" style="font-size:0.8rem; padding:10px; width:100%; border:2px solid #059669; color:#059669; font-weight:700;" onclick="bulkSetAllDevices('normal')">✓ 정상 운영</button>
+                    </div>
+                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #fbbf24;">
+                        <div style="font-size:0.75rem; color:#d97706; font-weight:700; margin-bottom:6px;">모든 기기</div>
+                        <button class="btn" style="font-size:0.8rem; padding:10px; width:100%; background:#f59e0b; color:white; font-weight:700;" onclick="bulkSetAllDevices('maintenance')">🔧 점검 중</button>
+                    </div>
+                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #ef4444;">
+                        <div style="font-size:0.75rem; color:#dc2626; font-weight:700; margin-bottom:6px;">모든 기기</div>
+                        <button class="btn danger" style="font-size:0.8rem; padding:10px; width:100%; font-weight:700;" onclick="bulkSetAllDevices('closed')">🌙 운영 종료</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        box.innerHTML = bulkControlHTML;
+        
+        // ============== 학년별 태블릿 개별 제어 (학생용 + 대시보드용 분리) ==============
+        let anyNonNormal = [];
+        
+        ROOM_LIST.forEach(room => {
+            const st = roomSystemStatus[room] || { mode: 'normal', message: '' };
+            if (st.mode !== 'normal') anyNonNormal.push(`${room}(${OPS_LABEL_MAP[st.mode]})`);
+            
+            const safeRoomId = room.replace(/\s/g, '_');
+            const roomCard = document.createElement('div');
+            roomCard.className = 'card';
+            roomCard.style.marginBottom = '20px';
+            
+            // 상태 뱃지 스타일 결정
+            let statusClass = 'status-normal';
+            let statusLabel = '정상 운영 중';
+            if (st.mode === 'maintenance') {
+                statusClass = 'status-maintenance';
+                statusLabel = '점검 중';
+            } else if (st.mode === 'closed') {
+                statusClass = 'status-closed';
+                statusLabel = '운영 종료';
+            }
+            
+            const sch = autoShutdownSchedules[room] || { enabled: false, startHour: 18, startMin: 0, endHour: 9, endMin: 0 };
+
+            roomCard.innerHTML = `
+                <h3 style="margin-bottom:16px; font-size:1.1rem;">
+                    ${room}
+                    <span class="room-status-badge ${statusClass}">${statusLabel}</span>
+                </h3>
+
+                <!-- 학생용/대시보드용 태블릿 제어: 2열로 배치하고 꽉 찬 색상 대신 좌측 라인 강조만 사용 -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-bottom:14px;">
+                    <div style="background:#fff; border:1px solid var(--line); border-left:4px solid #2563eb; border-radius:12px; padding:14px;">
+                        <div style="font-size:0.9rem; font-weight:700; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                            <span>📱</span> 학생용 태블릿 (index.html)
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                            <button class="btn gray" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','index','normal')">✓ 정상 운영</button>
+                            <button class="btn" style="font-size:0.78rem; padding:8px 12px; background:#f59e0b;" onclick="setDeviceSystemStatus('${room}','index','maintenance')">🔧 점검 중</button>
+                            <button class="btn danger" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','index','closed')">🌙 운영 종료</button>
+                        </div>
+                        <span class="input-label" style="margin-bottom:6px;">학생 화면 안내 문구</span>
+                        <input type="text" id="opsMsg_${safeRoomId}_index" class="form-input" style="margin-bottom:8px;" value="${(st.message||'').replace(/"/g,'&quot;')}" placeholder="예: 정기 점검 중입니다. 잠시 후 다시 이용해주세요.">
+                        <button class="btn gray" style="font-size:0.78rem;" onclick="saveDeviceOpsMessage('${room}','index')">문구 저장</button>
+                    </div>
+
+                    <div style="background:#fff; border:1px solid var(--line); border-left:4px solid #2563eb; border-radius:12px; padding:14px;">
+                        <div style="font-size:0.9rem; font-weight:700; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                            <span>📊</span> 선생님 대시보드 (dashboard.html)
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                            <button class="btn gray" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','dashboard','normal')">✓ 정상 운영</button>
+                            <button class="btn" style="font-size:0.78rem; padding:8px 12px; background:#f59e0b;" onclick="setDeviceSystemStatus('${room}','dashboard','maintenance')">🔧 점검 중</button>
+                            <button class="btn danger" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','dashboard','closed')">🌙 운영 종료</button>
+                        </div>
+                        <span class="input-label" style="margin-bottom:6px;">선생님 화면 안내 문구</span>
+                        <input type="text" id="opsMsg_${safeRoomId}_dashboard" class="form-input" style="margin-bottom:8px;" value="${(st.message||'').replace(/"/g,'&quot;')}" placeholder="예: 정기 점검 중입니다. 잠시 후 다시 이용해주세요.">
+                        <button class="btn gray" style="font-size:0.78rem;" onclick="saveDeviceOpsMessage('${room}','dashboard')">문구 저장</button>
+                    </div>
+                </div>
+
+                <!-- 자동 운영 종료 시간대 (몇 시부터 몇 시까지) -->
+                <div style="background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleAutoShutdownSection('${safeRoomId}')">
+                        <span style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+                            ⏰ 자동 운영 종료 시간대${sch.enabled ? ' <span class="status-badge st-pending">사용 중</span>' : ''}
+                        </span>
+                        <span id="arrow_${safeRoomId}" style="transition:transform .2s; display:inline-block; color:var(--sub);">▾</span>
+                    </div>
+                    <div id="autoShutdownContent_${safeRoomId}" style="overflow:hidden; max-height:0px; opacity:0; transition:all .25s;">
+                        <div style="padding-top:12px; display:flex; flex-direction:column; gap:10px;">
+                            <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                <input type="checkbox" id="autoShutdown_${safeRoomId}" ${sch.enabled ? 'checked' : ''}> 이 시간대에는 자동으로 운영 종료 처리
+                            </label>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:0.85rem;">
+                                <span>종료</span>
+                                <input type="number" id="shutdownStart_h_${safeRoomId}" min="0" max="23" value="${sch.startHour ?? 18}" class="form-input" style="width:56px; padding:6px; text-align:center;">시
+                                <input type="number" id="shutdownStart_m_${safeRoomId}" min="0" max="59" value="${sch.startMin ?? 0}" class="form-input" style="width:56px; padding:6px; text-align:center;">분
+                                <span>~ 재개</span>
+                                <input type="number" id="shutdownEnd_h_${safeRoomId}" min="0" max="23" value="${sch.endHour ?? 9}" class="form-input" style="width:56px; padding:6px; text-align:center;">시
+                                <input type="number" id="shutdownEnd_m_${safeRoomId}" min="0" max="59" value="${sch.endMin ?? 0}" class="form-input" style="width:56px; padding:6px; text-align:center;">분
+                            </div>
+                            <button class="btn gray" style="font-size:0.8rem; align-self:flex-start;" onclick="saveAutoShutdownSchedule('${room}')">저장</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            box.appendChild(roomCard);
+        });
+        
+        const banner = document.getElementById('maintBanner');
+        if (anyNonNormal.length) {
+            banner.style.display = 'block';
+            banner.innerText = `현재 일부 기기가 정상 운영 중이 아닙니다: ${anyNonNormal.join(', ')}`;
+        } else banner.style.display = 'none';
+        renderDeviceReloadCards();
+    }
+    function setDeviceSystemStatus(room, device, mode) {
+        const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
+        cur.mode = mode;
+        db.ref(`rooms/${room}/systemStatus`).set(cur);
+    }
+    
+    function bulkSetAllDevices(mode) {
+        const modeLabel = { normal: '정상 운영', maintenance: '점검 중', closed: '운영 종료' }[mode];
+        if (!confirm(`모든 기기를 "${modeLabel}" 상태로 변경하시겠습니까?`)) return;
+        
+        ROOM_LIST.forEach(room => {
+            const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
+            cur.mode = mode;
+            db.ref(`rooms/${room}/systemStatus`).set(cur);
+        });
+        
+        alert(`모든 기기가 "${modeLabel}" 상태로 변경되었습니다.`);
+    }
+    
+    function saveDeviceOpsMessage(room, device) {
+        const safeRoomId = room.replace(/\s/g, '_');
+        const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
+        cur.message = document.getElementById('opsMsg_' + safeRoomId + '_' + device).value;
+        db.ref(`rooms/${room}/systemStatus`).set(cur);
+        alert(`${room} 안내 문구가 저장되었습니다.`);
+    }
+    
+    function toggleAutoShutdownSection(safeRoomId) {
+        const content = document.getElementById(`autoShutdownContent_${safeRoomId}`);
+        const arrow = document.getElementById(`arrow_${safeRoomId}`);
+        const checkbox = document.getElementById(`autoShutdown_${safeRoomId}`);
+        
+        if (content.style.maxHeight === '0px') {
+            content.style.maxHeight = '500px';
+            content.style.opacity = '1';
+            arrow.style.transform = 'rotate(0deg)';
+        } else {
+            content.style.maxHeight = '0px';
+            content.style.opacity = '0';
+            arrow.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    function saveAutoShutdownSchedule(room) {
+        const safeRoomId = room.replace(/\s/g, '_');
+        const enabled = document.getElementById(`autoShutdown_${safeRoomId}`).checked;
+        const startHour = parseInt(document.getElementById(`shutdownStart_h_${safeRoomId}`).value) || 18;
+        const startMin = parseInt(document.getElementById(`shutdownStart_m_${safeRoomId}`).value) || 0;
+        const endHour = parseInt(document.getElementById(`shutdownEnd_h_${safeRoomId}`).value) || 9;
+        const endMin = parseInt(document.getElementById(`shutdownEnd_m_${safeRoomId}`).value) || 0;
+        
+        if (startHour < 0 || startHour > 23 || startMin < 0 || startMin > 59 ||
+            endHour < 0 || endHour > 23 || endMin < 0 || endMin > 59) {
+            alert('시간 입력이 올바르지 않습니다. (시: 0-23, 분: 0-59)');
+            return;
+        }
+        
+        const schedule = { startHour, startMin, endHour, endMin, enabled };
+        autoShutdownSchedules[room] = schedule;
+        db.ref(`rooms/${room}/autoShutdownSchedule`).set(schedule);
+        alert(`${room} 자동 종료 설정이 저장되었습니다.\n종료: ${String(startHour).padStart(2,'0')}:${String(startMin).padStart(2,'0')} ~ 재개: ${String(endHour).padStart(2,'0')}:${String(endMin).padStart(2,'0')}`);
+    }
+
+    function renderRoomBackupButtons() {
+        const grid = document.getElementById('roomBackupGrid');
+        if (!grid) return;
+        grid.innerHTML = "";
+        ROOM_LIST.forEach(room => {
+            const el = document.createElement('div');
+            el.className = 'room-stat-card';
+            el.innerHTML = `
+                <div class="room-name">${room}</div>
+                <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                    <button class="btn" style="font-size:0.85rem; padding:10px;" onclick="masterExportRoom('${room}')">내보내기</button>
+                    <input type="file" id="importFile_${room.replace(/\s/g,'_')}" accept=".json" style="font-size:0.8rem;">
+                    <button class="btn danger" style="font-size:0.85rem; padding:10px;" onclick="masterImportRoom('${room}')">복원</button>
+                </div>
+            `;
+            grid.appendChild(el);
+        });
+    }
+    function masterExportRoom(room) {
+        const bundle = { room, seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room] };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `${room}_백업_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+    function masterImportRoom(room) {
+        const fileInput = document.getElementById('importFile_' + room.replace(/\s/g,'_'));
+        if (!fileInput || !fileInput.files.length) { alert('백업 파일을 선택하세요.'); return; }
+        if (!confirm(`${room} 데이터를 덮어쓰기 합니다. 진행할까요?`)) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                if (json.seatLayout) db.ref(`rooms/${room}/seatLayout`).set(json.seatLayout);
+                if (json.notice) db.ref(`rooms/${room}/notice`).set(json.notice);
+                if (json.systemStatus) db.ref(`rooms/${room}/systemStatus`).set(json.systemStatus);
+                alert(`${room} 복원이 완료되었습니다.`);
+            } catch { alert('올바르지 않은 백업 파일입니다.'); }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+    function masterExportAll() {
+        const bundle = { rooms: {}, shared: { blacklist: masterBlacklist, students: masterStudents } };
+        ROOM_LIST.forEach(room => { bundle.rooms[room] = { seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room] }; });
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `전체시스템백업_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+    function masterImportAll() {
+        const fileInput = document.getElementById('masterImportFile');
+        if (!fileInput.files.length) { alert('백업 파일을 선택하세요.'); return; }
+        if (!confirm('현재 모든 교무실 데이터가 덮어쓰기됩니다. 진행할까요?')) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                if (json.rooms) Object.keys(json.rooms).forEach(room => {
+                    if (json.rooms[room].seatLayout) db.ref(`rooms/${room}/seatLayout`).set(json.rooms[room].seatLayout);
+                    if (json.rooms[room].notice) db.ref(`rooms/${room}/notice`).set(json.rooms[room].notice);
+                    if (json.rooms[room].systemStatus) db.ref(`rooms/${room}/systemStatus`).set(json.rooms[room].systemStatus);
+                });
+                if (json.shared) {
+                    if (json.shared.blacklist) db.ref('shared/blacklist').set(json.shared.blacklist);
+                    if (json.shared.students) db.ref('shared/students').set(json.shared.students);
+                }
+                alert('전체 시스템 복원이 완료되었습니다.');
+            } catch { alert('올바르지 않은 백업 파일입니다.'); }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+
+    // ===================== 데이터 마이그레이션 (CSV) =====================
+    let mgParsedRows = [];
+    let mgErrors = [];
+
+    function mgPopulateRoomSelect() {
+        const sel = document.getElementById('mgRoomSelect');
+        if (!sel) return;
+        sel.innerHTML = ROOM_LIST.map(r => `<option value="${r}">${r}</option>`).join('');
+    }
+
+    // 간단한 CSV 라인 파서 (따옴표로 감싸진 콤마 대응)
+    function mgParseCsvLine(line) {
+        const result = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (line[i+1] === '"') { cur += '"'; i++; }
+                    else inQuotes = false;
+                } else cur += ch;
+            } else {
+                if (ch === '"') inQuotes = true;
+                else if (ch === ',') { result.push(cur); cur = ''; }
+                else cur += ch;
+            }
+        }
+        result.push(cur);
+        return result;
+    }
+
+    // "2026. 6. 8. 오전 11:51:59" 같은 한국어 날짜 형식을 timestamp(ms)로 변환
+    function mgParseKoreanDateTime(str) {
+        if (!str) return null;
+        str = str.trim();
+        const m = str.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(오전|오후)\s*(\d{1,2}):(\d{2}):(\d{2})/);
+        if (!m) return null;
+        let [, y, mo, d, ampm, h, mi, s] = m;
+        y = parseInt(y); mo = parseInt(mo); d = parseInt(d); h = parseInt(h); mi = parseInt(mi); s = parseInt(s);
+        if (ampm === '오후' && h !== 12) h += 12;
+        if (ampm === '오전' && h === 12) h = 0;
+        const dt = new Date(y, mo - 1, d, h, mi, s);
+        return dt.getTime();
+    }
+
+    function mgFormatTimeForStore(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const y = d.getFullYear(), mo = d.getMonth()+1, day = d.getDate();
+        let h = d.getHours(); const mi = String(d.getMinutes()).padStart(2,'0');
+        const ampm = h < 12 ? '오전' : '오후';
+        let h12 = h % 12; if (h12 === 0) h12 = 12;
+        return `${y}. ${mo}. ${day}. ${ampm} ${h12}:${mi}`;
+    }
+
+    function mgNormalizeStatus(raw) {
+        const s = (raw || '').trim();
+        if (s === '출력 완료' || s === '부재중 처리') return s;
+        return '미출력'; // '대기 중' 등은 미출력으로 매핑
+    }
+
+    function mgHandleFile() {
+        const fileInput = document.getElementById('mgFileInput');
+        if (!fileInput.files.length) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const text = e.target.result;
+            const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+            mgParsedRows = [];
+            mgErrors = [];
+            lines.forEach((line, idx) => {
+                const cols = mgParseCsvLine(line);
+                if (cols.length < 7) { mgErrors.push(`${idx+1}행: 열 개수가 부족합니다 (${cols.length}개)`); return; }
+                const [timeStr, teacher, id, name, purpose, photo, status] = cols;
+                const ts = mgParseKoreanDateTime(timeStr);
+                if (!ts) { mgErrors.push(`${idx+1}행: 날짜 형식을 인식할 수 없습니다 ("${timeStr}")`); return; }
+                if (!id || isNaN(id.trim())) { mgErrors.push(`${idx+1}행: 학번이 올바르지 않습니다 ("${id}")`); return; }
+                mgParsedRows.push({
+                    timestamp: ts,
+                    time: mgFormatTimeForStore(ts),
+                    teacher: (teacher||'').trim(),
+                    id: id.trim(),
+                    name: (name||'').trim(),
+                    purpose: (purpose||'').trim(),
+                    status: mgNormalizeStatus(status)
+                });
+            });
+            mgShowPreview();
+        };
+        reader.readAsText(fileInput.files[0], 'utf-8');
+    }
+
+    function mgShowPreview() {
+        document.getElementById('mgStep1').classList.add('done');
+        mgPopulateRoomSelect();
+        document.getElementById('mgRoomSelectBox').style.display = 'block';
+        document.getElementById('mgStep2').classList.add('done');
+        document.getElementById('mgPreviewBox').style.display = 'block';
+        document.getElementById('mgStep3').classList.add('done');
+
+        const uniqueStudents = new Set(mgParsedRows.map(r => r.id));
+        const summaryGrid = document.getElementById('mgSummaryGrid');
+        summaryGrid.innerHTML = `
+            <div class="migrate-summary-card"><div class="num-big">${mgParsedRows.length}</div><div class="lbl">유효한 로그</div></div>
+            <div class="migrate-summary-card"><div class="num-big">${uniqueStudents.size}</div><div class="lbl">학생 수</div></div>
+            <div class="migrate-summary-card"><div class="num-big" style="color:${mgErrors.length ? '#dc2626' : '#15803d'};">${mgErrors.length}</div><div class="lbl">오류/제외된 행</div></div>
+        `;
+
+        const body = document.getElementById('mgPreviewBody');
+        body.innerHTML = mgParsedRows.slice(0, 10).map(r => `
+            <tr><td>${r.time}</td><td>${r.teacher}</td><td>${r.id}</td><td>${r.name}</td><td>${r.purpose}</td><td>${r.status}</td></tr>
+        `).join('') || `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">가져올 수 있는 데이터가 없습니다.</td></tr>`;
+
+        const errBox = document.getElementById('mgErrorBox');
+        if (mgErrors.length) {
+            errBox.innerHTML = `아래 ${mgErrors.length}개 행은 형식 오류로 제외됩니다:<br>` + mgErrors.slice(0, 8).map(e => `· ${e}`).join('<br>') + (mgErrors.length > 8 ? `<br>...외 ${mgErrors.length - 8}건` : '');
+        } else {
+            errBox.innerHTML = '';
+        }
+    }
+
+    function mgReset() {
+        mgParsedRows = [];
+        mgErrors = [];
+        document.getElementById('mgFileInput').value = '';
+        document.getElementById('mgRoomSelectBox').style.display = 'none';
+        document.getElementById('mgPreviewBox').style.display = 'none';
+        document.getElementById('mgProgressBox').style.display = 'none';
+        document.getElementById('mgDoneBox').style.display = 'none';
+        document.getElementById('mgStep1').classList.remove('done');
+        document.getElementById('mgStep2').classList.remove('done');
+        document.getElementById('mgStep3').classList.remove('done');
+    }
+
+    async function mgStartImport() {
+        if (mgParsedRows.length === 0) { alert('가져올 데이터가 없습니다.'); return; }
+        const room = document.getElementById('mgRoomSelect').value;
+        const autoRegister = document.getElementById('mgAutoRegisterStudents').checked;
+        if (!confirm(`${room}에 ${mgParsedRows.length}건의 호출 로그를 가져옵니다. 계속할까요?`)) return;
+
+        document.getElementById('mgPreviewBox').style.display = 'none';
+        document.getElementById('mgProgressBox').style.display = 'block';
+        const fill = document.getElementById('mgProgressFill');
+        const label = document.getElementById('mgProgressLabel');
+
+        // 1) 호출 로그 업로드
+        const updates = {};
+        mgParsedRows.forEach(r => {
+            const newKey = db.ref().push().key;
+            updates[`rooms/${room}/calls/${newKey}`] = {
+                time: r.time, timestamp: r.timestamp, teacher: r.teacher,
+                id: r.id, name: r.name, purpose: r.purpose, status: r.status
+            };
+        });
+        label.innerText = '호출 로그 업로드 중...';
+        fill.style.width = '30%';
+        await db.ref().update(updates);
+
+        // 2) 학생 DB 자동 등록
+        let registeredCount = 0;
+        if (autoRegister) {
+            label.innerText = '학생 정보 등록 중...';
+            fill.style.width = '70%';
+            const studentMap = {};
+            mgParsedRows.forEach(r => {
+                if (r.id && r.name && !studentMap[r.id] && !masterStudents[r.id]) {
+                    studentMap[r.id] = { name: r.name, createdAt: Date.now() };
+                }
+            });
+            const studentKeys = Object.keys(studentMap);
+            registeredCount = studentKeys.length;
+            if (studentKeys.length) {
+                await db.ref('shared/students').update(studentMap);
+            }
+        }
+
+        fill.style.width = '100%';
+        label.innerText = '완료';
+
+        setTimeout(() => {
+            document.getElementById('mgProgressBox').style.display = 'none';
+            document.getElementById('mgDoneBox').style.display = 'block';
+            document.getElementById('mgDoneSummary').innerHTML = `
+                <div class="migrate-summary-card"><div class="num-big">${mgParsedRows.length}</div><div class="lbl">로그 가져옴</div></div>
+                <div class="migrate-summary-card"><div class="num-big">${registeredCount}</div><div class="lbl">신규 학생 등록</div></div>
+                <div class="migrate-summary-card"><div class="num-big" style="color:var(--blue);">${room}</div><div class="lbl">대상 교무실</div></div>
+            `;
+        }, 400);
+    }
+
+    async function masterChangePassword() {
+        const cur = document.getElementById('secCurrentPw').value;
+        const nPw = document.getElementById('secNewPw').value;
+        const cPw = document.getElementById('secConfirmPw').value;
+        if (cur.length !== 6 || isNaN(cur)) { alert('현재 비밀번호 6자리를 정확히 입력하세요.'); return; }
+        if (nPw.length !== 6 || isNaN(nPw)) { alert('새 비밀번호는 숫자 6자리여야 합니다.'); return; }
+        if (nPw !== cPw) { alert('새 비밀번호 확인이 일치하지 않습니다.'); return; }
+        try {
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, cur);
+            await auth.currentUser.updatePassword(nPw);
+            alert('비밀번호가 변경되었습니다. (모든 교무실 공통 적용)');
+            document.getElementById('secCurrentPw').value = '';
+            document.getElementById('secNewPw').value = '';
+            document.getElementById('secConfirmPw').value = '';
+        } catch (err) {
+            if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') alert('현재 비밀번호가 일치하지 않습니다.');
+            else alert('오류가 발생했습니다: ' + err.message);
+        }
+    }
+</script>
+</body>
+</html>
