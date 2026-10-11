@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icon-192.png">
@@ -12,12 +14,12 @@
     <link rel="stylesheet" href="common.css">
     <style>
         html, body { height: 100%; }
-        body { margin: 0; padding: 8px; background: #f1f5f9; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
+        body { margin: 0; padding: 18px; background: #f1f5f9; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
 
-        .container { background: white; padding: 16px 22px; border-radius: 22px; box-shadow: 0 12px 36px rgba(0,0,0,0.08); width: 100%; max-width: 1100px; height: 100%; display: flex; flex-direction: column; position: relative; overflow-y: auto; }
+        .container { background: white; padding: 24px 34px; border-radius: 22px; box-shadow: 0 12px 36px rgba(0,0,0,0.08); width: 100%; max-width: 1100px; height: 100%; display: flex; flex-direction: column; position: relative; overflow-y: auto; }
         .page { display: none; flex-direction: column; flex: 1; min-height: 0; }
         .page.active { display: flex; }
-        .narrow-wrap { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        .narrow-wrap { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; justify-content: center; }
 
         h1 { font-size: 1.5rem; color: #1e293b; margin: 0; font-weight: 800; }
         .subtitle { color: #64748b; margin: 0 0 12px; line-height: 1.5; font-size: 0.92rem; }
@@ -41,7 +43,7 @@
         .step-hint { color: #64748b; font-size: 0.9rem; margin-left: auto; }
 
         /* 첫 화면 */
-        .welcome-box { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 1; }
+        .welcome-box { text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 28px; }
         .welcome-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 8px; background: linear-gradient(to right, #2563eb, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .welcome-author { font-size: 1rem; font-weight: 700; color: #1e293b; background: #e2e8f0; padding: 6px 18px; border-radius: 50px; margin-bottom: 16px; }
         .welcome-desc { color: #64748b; font-size: 1.02rem; line-height: 1.6; }
@@ -85,7 +87,7 @@
         .wheel::after { bottom: 0; background: linear-gradient(to top, white 5%, rgba(255,255,255,0)); }
 
         /* 3단계: 동의 */
-        .agreement-scroll-box { border: 2px solid #e2e8f0; border-radius: 14px; padding: 12px; flex: 1; min-height: 80px; overflow-y: auto; margin-bottom: 10px; }
+        .agreement-scroll-box { border: 2px solid #e2e8f0; border-radius: 14px; padding: 12px; flex: 0 1 auto; min-height: 80px; overflow-y: auto; margin-bottom: 12px; }
         .agreement-box { background: #fff1f2; border-radius: 12px; padding: 14px; color: #9f1239; font-size: 0.85rem; line-height: 1.55; }
         .agreement-box p { margin: 4px 0; }
         .agreement-box ul { margin: 4px 0 0; padding-left: 20px; }
@@ -200,7 +202,7 @@
                 <div id="mainNoticeBanner" class="notice-banner"></div>
                 <div class="welcome-desc">본 시스템은 교무실에 계신 선생님을<br>실시간으로 안전하고 빠르게 호출하는 통합 벨입니다.</div>
             </div>
-            <div class="page-actions"><button class="primary-btn" style="padding:20px; font-size:1.3rem;" onclick="go(1)">선생님 호출하기</button></div>
+            <div class="page-actions" style="margin-top:0;"><button class="primary-btn" style="padding:20px; font-size:1.3rem;" onclick="go(1)">선생님 호출하기</button></div>
         </div>
     </div>
 
@@ -1179,10 +1181,6 @@
         if (holdBtn.classList.contains('disabled')) return;
         const sid = buildStudentId();
         if (!sid) return;
-        if (!isSubmitted) {
-            isSubmitted = true;
-            try { executeSubmit(sid); } catch (err) { console.error('제출 처리 오류:', err); }
-        }
         clearInterval(pressTimer);
         progress = 0;
         bar.style.width = "0%";
@@ -1192,6 +1190,11 @@
             bar.style.width = progress + "%";
             if (progress >= 100) {
                 clearInterval(pressTimer);
+                // 5초를 끝까지 눌렀을 때만 호출을 전송한다 (짧게 여러 번 톡톡 눌러도 전송되지 않음)
+                if (!isSubmitted) {
+                    isSubmitted = true;
+                    try { executeSubmit(sid); } catch (err) { console.error('제출 처리 오류:', err); }
+                }
                 document.getElementById('holdingOverlay').style.display = 'flex';
                 setTimeout(() => { document.getElementById('holdingOverlay').style.display = 'none'; go(4); }, 800);
             }
@@ -1206,6 +1209,7 @@
     holdBtn.addEventListener('touchstart', startPress, { passive: false });
     window.addEventListener('mouseup', endPress);
     window.addEventListener('touchend', endPress);
+    window.addEventListener('touchcancel', endPress);
 
     function startCountdown() {
         let sec = AUTO_RETURN_SEC;

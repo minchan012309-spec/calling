@@ -201,17 +201,13 @@ function speak(text, s, onend) {
 if (ttsSupported) window.speechSynthesis.getVoices(); // 일부 브라우저는 첫 호출 때 목록을 비동기로 채움
 
 // ===================== 태블릿(키오스크) 모드 =====================
-// 핀치 줌 차단 + 첫 터치 때 전체 화면(주소창 숨김) 진입
+// 핀치 줌 차단
 function enableKioskMode() {
     document.body.classList.add('kiosk');
     ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
     document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
-    document.addEventListener('pointerup', () => {
-        getAudioCtx();
-        const el = document.documentElement;
-        if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
-    });
+    document.addEventListener('pointerup', getAudioCtx); // 첫 터치에 오디오 잠금 해제
 }
 
 // ===================== 관리자 PIN 인증 (index / dashboard 공통) =====================
@@ -320,3 +316,6 @@ function summarizeCalls(calls) {
     };
     return { todayCalls, topTeacher: count('teacher'), topPurpose: count('purpose') };
 }
+
+// 서비스 워커 등록 (홈 화면에 앱으로 설치할 수 있게 함. https 또는 localhost에서만 동작)
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
