@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마스터 관리자 콘솔</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css" type="text/css"/>
+    <link rel="stylesheet" href="common.css">
     <style>
         :root {
             --blue: #2563eb;
@@ -16,8 +16,7 @@
             --line: #e5e9f0;
             --bg-soft: #f8fafc;
         }
-        * { font-family: 'Paperlogy', sans-serif !important; box-sizing: border-box; }
-        body { margin: 0; background: #ffffff; color: var(--ink); min-height: 100vh; font-weight: 400; }
+        body { margin: 0; background: #ffffff; color: var(--ink); min-height: 100dvh; font-weight: 400; }
 
         /* 로그인 게이트 */
         #loginGate { position: fixed; inset: 0; background: #f8fafc; z-index: 3000000; display: flex; justify-content: center; align-items: center; padding: 20px; }
@@ -29,13 +28,13 @@
         .pad-btn.danger { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
 
         /* 레이아웃 */
-        #appShell { display: none; height: 100vh; }
+        #appShell { display: none; height: 100dvh; }
         .sidebar { width: 260px; background: #ffffff; color: var(--ink); display: flex; flex-direction: column; flex-shrink: 0; transition: margin-left 0.2s ease; border-right: 1px solid var(--line); }
         .sidebar.collapsed { margin-left: -260px; }
         .sidebar-header { padding: 24px 22px; font-size: 1.2rem; font-weight: 700; color: var(--blue); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 22px; color: var(--sub); cursor: pointer; font-weight: 500; font-size: 0.95rem; border-left: 3px solid transparent; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 22px; color: var(--sub); cursor: pointer; font-weight: 500; font-size: 0.95rem; }
         .nav-item:hover { background: var(--blue-soft); color: var(--blue); }
-        .nav-item.active { background: var(--blue-soft); color: var(--blue); font-weight: 700; border-left: 3px solid var(--blue); }
+        .nav-item.active { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
         .sidebar-footer { margin-top: auto; padding: 18px 22px; border-top: 1px solid var(--line); }
         .logout-btn { background: #f8fafc; border: 1px solid var(--line); color: var(--sub); padding: 12px; border-radius: 12px; width: 100%; font-weight: 600; cursor: pointer; }
         .logout-btn:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
@@ -119,7 +118,7 @@
 
         /* 알림 토스트 */
         #alertToastBox { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .alert-toast { background: white; color: var(--ink); padding: 14px 20px; border-radius: 14px; font-weight: 600; font-size: 0.9rem; border: 1px solid var(--line); border-left: 4px solid #ef4444; box-shadow: 0 8px 24px rgba(15,23,42,0.12); animation: toastIn 0.3s ease; }
+        .alert-toast { background: white; color: var(--ink); padding: 14px 20px; border-radius: 14px; font-weight: 600; font-size: 0.9rem; border: 1px solid #fecaca; box-shadow: 0 8px 24px rgba(15,23,42,0.12); animation: toastIn 0.3s ease; }
         @keyframes toastIn { from { opacity:0; transform: translateX(30px); } to { opacity:1; transform: translateX(0); } }
 
         /* 좌석 편집 스타일 */
@@ -161,6 +160,58 @@
         .status-maintenance { background: #fed7aa; color: #92400e; }
         .status-closed { background: #fee2e2; color: #991b1b; }
 
+        .ops-title { font-weight: 700; font-size: 0.95rem; color: var(--blue); margin-bottom: 10px; }
+        .ops-sub { font-weight: 500; font-size: 0.78rem; color: var(--sub); margin-left: 6px; }
+        .ops-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .ops-btns .btn { flex: 1 1 120px; }
+        .ops-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+        .ops-time-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+        .ops-time-row label { font-size: 0.82rem; font-weight: 600; color: var(--sub); flex: 1 1 130px; }
+        .ops-time-row .form-input { margin: 4px 0 0; }
+        .ops-time-row > span { padding-bottom: 14px; color: var(--sub); }
+        .ops-hint { font-size: 0.8rem; color: var(--sub); line-height: 1.5; margin: 4px 0 10px; }
+        .ops-box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+        .sidebar-backdrop { display: none; }
+        .pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .pager label { font-size: 0.85rem; font-weight: 600; color: var(--sub); display: flex; align-items: center; gap: 6px; }
+        .pager select { padding: 8px 10px; border: 1px solid var(--line); background: #f8fafc; border-radius: 10px; font-size: 0.88rem; }
+        .pager-nav { display: flex; align-items: center; gap: 6px; }
+        .pager-nav button { background: #f8fafc; border: 1px solid var(--line); color: var(--sub); min-width: 38px; height: 38px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .pager-nav button:disabled { opacity: 0.4; cursor: default; }
+        .pager-nav .pager-info { font-size: 0.88rem; font-weight: 700; color: var(--ink); min-width: 64px; text-align: center; }
+        .student-meta { font-size: 0.78rem; color: var(--sub); font-weight: 500; margin-top: 2px; }
+        .search-more { padding: 10px 14px; font-size: 0.82rem; color: var(--sub); text-align: center; }
+
+        /* ===== 모바일 / 좁은 화면 ===== */
+        @media (max-width: 900px) {
+            .sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 3500000; margin-left: 0; transition: transform 0.2s ease; box-shadow: 0 0 40px rgba(15,23,42,0.2); overflow-y: auto; }
+            .sidebar.collapsed { margin-left: 0; transform: translateX(-105%); box-shadow: none; }
+            .sidebar-backdrop.show { display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.4); z-index: 3400000; }
+            .topbar { padding: 10px 14px; gap: 10px; }
+            .global-search-box { order: 3; flex: 1 1 100%; max-width: none; margin-left: 0; }
+            .content-scroll { padding: 14px; }
+            .card { padding: 16px; border-radius: 16px; }
+            .room-stat-grid { grid-template-columns: 1fr; }
+            .filter-row select, .filter-row .btn { flex: 1 1 40%; }
+            .filter-row input[type="text"] { flex: 1 1 100%; }
+            .pager { justify-content: center; }
+            #alertToastBox { left: 14px; right: 14px; }
+            .admin-box { padding: 24px 18px; }
+
+            table.log-table.responsive thead { display: none; }
+            table.log-table.responsive, table.log-table.responsive tbody, table.log-table.responsive tr, table.log-table.responsive td { display: block; width: 100%; }
+            table.log-table.responsive tr { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; padding: 8px 12px; position: relative; background: white; }
+            table.log-table.responsive tr.unresolved { background: #fffbeb; }
+            table.log-table.responsive td { border: none; padding: 3px 0; display: flex; gap: 10px; }
+            table.log-table.responsive td::before { content: attr(data-label); color: var(--sub); font-weight: 600; min-width: 62px; flex-shrink: 0; }
+            table.log-table.responsive td.check-cell { position: absolute; top: 8px; right: 10px; width: auto; }
+            table.log-table.responsive td.check-cell::before { display: none; }
+            table.log-table.responsive td.empty-cell::before { display: none; }
+        }
+        @media (max-width: 480px) {
+            .tab-btn { padding: 8px 14px; }
+            .list-item { flex-wrap: wrap; gap: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -171,23 +222,24 @@
         <div style="color:#64748b; margin:8px 0 10px; font-size:0.9rem;" id="pinSubtitle">비밀번호 6자리를 입력하세요.</div>
         <div class="pin-display" id="pinStars"></div>
         <div class="pad-grid">
-            <button class="pad-btn" onclick="pressPin('1')">1</button>
-            <button class="pad-btn" onclick="pressPin('2')">2</button>
-            <button class="pad-btn" onclick="pressPin('3')">3</button>
-            <button class="pad-btn" onclick="pressPin('4')">4</button>
-            <button class="pad-btn" onclick="pressPin('5')">5</button>
-            <button class="pad-btn" onclick="pressPin('6')">6</button>
-            <button class="pad-btn" onclick="pressPin('7')">7</button>
-            <button class="pad-btn" onclick="pressPin('8')">8</button>
-            <button class="pad-btn" onclick="pressPin('9')">9</button>
-            <button class="pad-btn danger" onclick="clearPin()">C</button>
-            <button class="pad-btn" onclick="pressPin('0')">0</button>
+            <button class="pad-btn" onclick="pinAuth.press('1')">1</button>
+            <button class="pad-btn" onclick="pinAuth.press('2')">2</button>
+            <button class="pad-btn" onclick="pinAuth.press('3')">3</button>
+            <button class="pad-btn" onclick="pinAuth.press('4')">4</button>
+            <button class="pad-btn" onclick="pinAuth.press('5')">5</button>
+            <button class="pad-btn" onclick="pinAuth.press('6')">6</button>
+            <button class="pad-btn" onclick="pinAuth.press('7')">7</button>
+            <button class="pad-btn" onclick="pinAuth.press('8')">8</button>
+            <button class="pad-btn" onclick="pinAuth.press('9')">9</button>
+            <button class="pad-btn danger" onclick="pinAuth.clear()">C</button>
+            <button class="pad-btn" onclick="pinAuth.press('0')">0</button>
             <button class="pad-btn" style="background:#e2e8f0; font-size:0.9rem;" onclick="location.reload()">취소</button>
         </div>
     </div>
 </div>
 
 <div id="appShell">
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">마스터 관리자</div>
         <div class="nav-item active" data-view="overview" onclick="showView('overview')">대시보드</div>
@@ -211,7 +263,7 @@
             <div class="topbar-title" id="topbarTitle">대시보드</div>
             
             <div class="global-search-box">
-                <input type="text" id="globalSearchInput" class="global-search-input" placeholder="통합 검색 (Enter)" onkeypress="if(event.key==='Enter') executeGlobalSearch()">
+                <input type="text" id="globalSearchInput" class="global-search-input" placeholder="통합 검색 (학생·선생님·로그)" autocomplete="off" oninput="onGlobalSearchInput()">
             </div>
 
             <div style="margin-left:auto; display:flex; align-items:center; gap:8px; font-size:0.85rem; color:#64748b; font-weight:700;">
@@ -244,17 +296,17 @@
                     <div class="tab-row" id="gradeTabRow"></div>
                     <div class="tab-row" id="roomTabRow"></div>
                     <div class="filter-row">
-                        <select id="statusFilter" onchange="renderLogTable()">
+                        <select id="statusFilter" onchange="resetLogPageAndRender()">
                             <option value="all">전체 상태</option>
                             <option value="미출력">미출력만</option>
                             <option value="출력 완료">출력 완료만</option>
                             <option value="부재중 처리">부재중 처리만</option>
                         </select>
-                        <select id="sortFilter" onchange="renderLogTable()">
+                        <select id="sortFilter" onchange="resetLogPageAndRender()">
                             <option value="newest">최신순</option>
                             <option value="oldest">오래된순</option>
                         </select>
-                        <input type="text" id="logSearchInput" placeholder="학생명, 선생님, 목적으로 검색" oninput="renderLogTable()">
+                        <input type="text" id="logSearchInput" placeholder="학생명, 선생님, 목적으로 검색" oninput="resetLogPageAndRender()">
                         <button class="btn gray" onclick="refreshLogTable()">🔄 새로고침</button>
                         <button class="btn" onclick="downloadMasterCSV()">CSV 다운로드</button>
                         <button class="btn danger" onclick="deleteSelectedLogs()">선택 삭제</button>
@@ -262,7 +314,7 @@
                     </div>
                     <div id="logCountLabel" style="font-size:0.85rem; font-weight:700; color:#2563eb; margin-bottom:10px;"></div>
                     <div style="overflow-x:auto;">
-                        <table class="log-table">
+                        <table class="log-table responsive">
                             <thead>
                                 <tr>
                                     <th style="width: 40px; text-align: center;">
@@ -280,6 +332,7 @@
                             <tbody id="logTableBody"></tbody>
                         </table>
                     </div>
+                    <div class="pager" id="logPager"></div>
                 </div>
             </div>
 
@@ -308,13 +361,13 @@
                         <button class="btn" onclick="masterAddStudent()" style="white-space:nowrap;">등록</button>
                     </div>
                     <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
-                        <input type="text" id="mStudentSearch" class="form-input" placeholder="검색" style="margin:0; flex:1; min-width:160px;" oninput="renderMasterStudentList()">
-                        <select id="mStudentSort" class="form-input" style="margin:0; width:140px;" onchange="renderMasterStudentList()">
+                        <input type="text" id="mStudentSearch" class="form-input" placeholder="검색" style="margin:0; flex:1; min-width:160px;" oninput="resetStudentPageAndRender()">
+                        <select id="mStudentSort" class="form-input" style="margin:0; width:140px;" onchange="resetStudentPageAndRender()">
                             <option value="id">학번순</option>
                             <option value="newest">최신 등록순</option>
                             <option value="oldest">오래된 등록순</option>
                         </select>
-                        <select id="mStudentGrade" class="form-input" style="margin:0; width:120px;" onchange="renderMasterStudentList()">
+                        <select id="mStudentGrade" class="form-input" style="margin:0; width:120px;" onchange="resetStudentPageAndRender()">
                             <option value="all">전체 학년</option>
                             <option value="1">1학년</option>
                             <option value="2">2학년</option>
@@ -325,7 +378,8 @@
                         </label>
                         <button class="btn danger" onclick="masterDeleteSelectedStudents()">선택 삭제</button>
                     </div>
-                    <div class="list-box" id="mStudentBox"></div>
+                    <div class="list-box" id="mStudentBox" style="max-height:none;"></div>
+                    <div class="pager" id="studentPager"></div>
                 </div>
             </div>
 
@@ -356,7 +410,7 @@
             <div class="view-page" id="view-ops">
                 <div class="card">
                     <h3>교무실별 운영 상태</h3>
-                    <div style="color:var(--sub); font-size:0.88rem; margin-bottom:16px;">각 교무실 태블릿마다 운영 상태와 안내 문구를 따로 설정할 수 있고, 카드 안의 "자동 운영 종료 시간대"에서 몇 시부터 몇 시까지 자동으로 종료할지 범위로 지정할 수 있습니다.</div>
+                    <div style="color:var(--sub); font-size:0.88rem; margin-bottom:16px;">교무실마다 운영 상태와 안내 문구를 설정하고, "자동 운영 종료 시간대"로 몇 시부터 몇 시까지 자동으로 운영을 종료할지 정할 수 있습니다.</div>
                     <div id="opsRoomBox"></div>
                 </div>
                 <div class="card">
@@ -508,216 +562,178 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="common.js"></script>
 
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDoWX2pA7BXPVmr6Zelnkq3OjZC96Z1uE4",
-      authDomain: "calling-a708e.firebaseapp.com",
-      databaseURL: "https://calling-a708e-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "calling-a708e",
-      storageBucket: "calling-a708e.firebasestorage.app",
-      messagingSenderId: "418677588330",
-      appId: "1:418677588330:web:458f37a7a137795e22a513"
-    };
+    // ===================== 로그인 =====================
+    const pinAuth = createPinAuth({
+        storagePrefix: 'sys_master',
+        onSuccess: enterApp,
+        onClose: () => {},
+        onLocked: () => alert('인증 5회 실패로 5분간 잠겼습니다. 잠시 후 다시 시도해 주세요.')
+    });
+    db.ref('shared/adminSetupDone').once('value').then(() => setTimeout(() => pinAuth.open(), 0));
 
-    const HAS_FIREBASE_CONFIG = Boolean(
-      firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.databaseURL &&
-      firebaseConfig.projectId
-    );
-
-    if (!HAS_FIREBASE_CONFIG) {
-      const resetBanner = document.createElement('div');
-      resetBanner.style.position = 'fixed';
-      resetBanner.style.inset = '0';
-      resetBanner.style.background = '#f8fafc';
-      resetBanner.style.display = 'flex';
-      resetBanner.style.alignItems = 'center';
-      resetBanner.style.justifyContent = 'center';
-      resetBanner.style.fontSize = '1.4rem';
-      resetBanner.style.fontWeight = '800';
-      resetBanner.style.color = '#1e293b';
-      resetBanner.style.zIndex = '999999';
-      resetBanner.textContent = 'Firebase 설정이 비어 있습니다. 새 프로젝트의 firebaseConfig를 붙여넣고 다시 로드하세요.';
-      document.body.appendChild(resetBanner);
-      throw new Error('Firebase not configured. Paste a new firebaseConfig before reusing this app.');
-    }
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(()=>{});
-    const ADMIN_EMAIL = "master-admin@teacher-calling-system.local";
-
-    const ROOM_LIST = ["1학년 교무실", "2학년 교무실", "3학년 교무실", "본교무실"];
-    let inputtedPin = "";
-    let adminSetupDone = true;
-    let pinStage = 'login';
-    let pinFirstEntry = '';
-
-    // PIN 입력창 초기화
-    if (document.getElementById('pinStars')) {
-        document.getElementById('pinStars').innerText = '';
-    }
-
-    db.ref('shared/adminSetupDone').on('value', snap => { adminSetupDone = !!snap.val(); });
-
-    function pressPin(num) {
-        if (inputtedPin.length >= 6) return;
-        inputtedPin += num;
-        const starsEl = document.getElementById('pinStars');
-        if (starsEl) {
-            starsEl.innerText = "● ".repeat(inputtedPin.length).trim();
-        }
-        if (inputtedPin.length === 6) setTimeout(() => handlePinComplete(), 150);
-    }
-    function clearPin() {
-        inputtedPin = "";
-        const starsEl = document.getElementById('pinStars');
-        if (starsEl) {
-            starsEl.innerText = "";
-        }
-    }
-    
-    // 키보드 입력 지원
-    function setupPasswordKeyboardSupport() {
-        const loginGate = document.getElementById('loginGate');
-        if (!loginGate) return;
-        document.addEventListener('keydown', (e) => {
-            if (loginGate.style.display === 'none') return;
-            if (/^[0-9]$/.test(e.key)) { e.preventDefault(); pressPin(e.key); }
-            else if (e.key === 'Backspace') { e.preventDefault(); clearPin(); }
-            else if (e.key === 'Enter') { e.preventDefault(); if (inputtedPin.length === 6) handlePinComplete(); }
-        });
-    }
-    
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupPasswordKeyboardSupport);
-    else setupPasswordKeyboardSupport();
-
-    function updatePinPadUI() {
-        const title = document.getElementById('pinTitleText');
-        const subtitle = document.getElementById('pinSubtitle');
-        if (pinStage === 'setup_new') { title.innerText = '관리자 비밀번호 최초 설정'; subtitle.innerText = '숫자 6자리를 입력하세요.'; }
-        else if (pinStage === 'setup_confirm') { title.innerText = '비밀번호 확인'; subtitle.innerText = '방금 입력한 6자리를 다시 입력해주세요.'; }
-        else { title.innerText = '마스터 관리자 인증'; subtitle.innerText = '비밀번호 6자리를 입력하세요.'; }
-    }
-    async function handlePinComplete() {
-        const pin = inputtedPin;
-        if (pinStage === 'setup_new') { pinFirstEntry = pin; pinStage = 'setup_confirm'; updatePinPadUI(); clearPin(); return; }
-        if (pinStage === 'setup_confirm') {
-            if (pin !== pinFirstEntry) { alert('비밀번호가 서로 다릅니다.'); pinStage='setup_new'; updatePinPadUI(); clearPin(); return; }
-            try {
-                await auth.createUserWithEmailAndPassword(ADMIN_EMAIL, pin);
-                await db.ref('shared/adminSetupDone').set(true);
-                enterApp();
-            } catch (err) {
-                if (err.code === 'auth/email-already-in-use') { alert('이미 설정된 비밀번호가 있습니다. 로그인해주세요.'); pinStage='login'; updatePinPadUI(); clearPin(); }
-                else { alert('오류: ' + err.message); clearPin(); }
-            }
-            return;
-        }
-        try {
-            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin);
-            enterApp();
-        } catch (err) {
-            if (err.code === 'auth/user-not-found') { pinStage='setup_new'; updatePinPadUI(); clearPin(); return; }
-            alert('비밀번호가 올바르지 않습니다.');
-            clearPin();
-        }
-    }
-    pinStage = 'login';
-    setTimeout(() => { pinStage = adminSetupDone ? 'login' : 'setup_new'; updatePinPadUI(); }, 400);
+    // 키보드 숫자 입력
+    document.addEventListener('keydown', e => {
+        if (document.getElementById('loginGate').style.display === 'none') return;
+        if (/^[0-9]$/.test(e.key)) { e.preventDefault(); pinAuth.press(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); pinAuth.clear(); }
+    });
 
     function doLogout() { auth.signOut().catch(()=>{}); location.reload(); }
 
     function enterApp() {
         document.getElementById('loginGate').style.display = 'none';
         document.getElementById('appShell').style.display = 'flex';
+        if (isMobileLayout()) document.getElementById('sidebar').classList.add('collapsed');
         initApp();
     }
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+    function isMobileLayout() { return window.matchMedia('(max-width: 900px)').matches; }
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        sb.classList.toggle('collapsed');
+        document.getElementById('sidebarBackdrop').classList.toggle('show', isMobileLayout() && !sb.classList.contains('collapsed'));
+    }
+    function closeSidebarOnMobile() {
+        if (!isMobileLayout()) return;
+        document.getElementById('sidebar').classList.add('collapsed');
+        document.getElementById('sidebarBackdrop').classList.remove('show');
+    }
 
     const VIEW_TITLES = {
         overview: '대시보드', logs: '호출 로그', blacklist: '블랙리스트',
         studentdb: '학생 DB', seats: '좌석 배치 관리', notice: '공지사항 관리',
-        ops: '운영 제어', backup: '데이터 백업', migrate: '데이터 마이그레이션', firebase: '파이어베이스 관리', 
+        ops: '운영 제어', backup: '데이터 백업', migrate: '데이터 마이그레이션', firebase: '파이어베이스 관리',
         security: '비밀번호 변경', search: '통합 검색 결과'
     };
+    let currentView = 'overview';
+    let viewBeforeSearch = 'overview';
+
     function showView(key) {
+        if (key !== 'search') document.getElementById('globalSearchInput').value = '';
+        currentView = key;
         document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
-        const targetView = document.getElementById('view-' + key);
-        if (targetView) targetView.classList.add('active');
-        
-        document.querySelectorAll('.nav-item').forEach(n => {
-            if (n.dataset.view) {
-                n.classList.toggle('active', n.dataset.view === key);
-            }
-        });
+        const target = document.getElementById('view-' + key);
+        if (target) target.classList.add('active');
+        document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view === key));
         document.getElementById('topbarTitle').innerText = VIEW_TITLES[key] || '마스터 콘솔';
+        document.querySelector('.content-scroll').scrollTop = 0;
+        closeSidebarOnMobile();
         if (key === 'seats') renderMasterSeatEditor();
         if (key === 'backup') renderRoomBackupButtons();
         if (key === 'migrate') mgPopulateRoomSelect();
         if (key === 'ops') renderOpsStatus();
     }
 
-    // ===================== 통합 검색 기능 =====================
-    function executeGlobalSearch() {
+    // ===================== 페이지 나누기 (호출 로그 / 학생 DB 공통) =====================
+    const PAGE_SIZES = [10, 30, 80];
+    function loadPageSize(key) {
+        const saved = parseInt(localStorage.getItem('master_page_size_' + key));
+        return PAGE_SIZES.includes(saved) ? saved : 30;
+    }
+    const logPaging = { page: 1, size: loadPageSize('logs') };
+    const studentPaging = { page: 1, size: loadPageSize('students') };
+
+    function renderPager(boxId, key, paging, total, rerender) {
+        const box = document.getElementById(boxId);
+        const pages = Math.max(1, Math.ceil(total / paging.size));
+        if (paging.page > pages) paging.page = pages;
+        box.innerHTML = `
+            <label>한 페이지에
+                <select>${PAGE_SIZES.map(n => `<option value="${n}" ${n === paging.size ? 'selected' : ''}>${n}개</option>`).join('')}</select>
+                표시
+            </label>
+            <div class="pager-nav">
+                <button data-go="first" ${paging.page <= 1 ? 'disabled' : ''}>«</button>
+                <button data-go="prev" ${paging.page <= 1 ? 'disabled' : ''}>‹</button>
+                <span class="pager-info">${paging.page} / ${pages}</span>
+                <button data-go="next" ${paging.page >= pages ? 'disabled' : ''}>›</button>
+                <button data-go="last" ${paging.page >= pages ? 'disabled' : ''}>»</button>
+            </div>`;
+        box.querySelector('select').onchange = e => {
+            paging.size = parseInt(e.target.value);
+            paging.page = 1;
+            localStorage.setItem('master_page_size_' + key, paging.size);
+            rerender();
+        };
+        box.querySelectorAll('[data-go]').forEach(btn => btn.onclick = () => {
+            const go = btn.dataset.go;
+            paging.page = go === 'first' ? 1 : go === 'last' ? pages : go === 'prev' ? paging.page - 1 : paging.page + 1;
+            rerender();
+        });
+    }
+
+    // ===================== 통합 검색 (입력하는 즉시 결과 표시) =====================
+    const SEARCH_LIMIT = 30;
+    let searchTimer = null;
+    function onGlobalSearchInput() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(runGlobalSearch, 150);
+    }
+    function runGlobalSearch() {
         const q = document.getElementById('globalSearchInput').value.trim().toLowerCase();
-        if(!q) return;
-        
+        if (!q) {
+            if (currentView === 'search') showView(viewBeforeSearch);
+            return;
+        }
+        if (currentView !== 'search') { viewBeforeSearch = currentView; showView('search'); document.getElementById('globalSearchInput').value = q; }
+        renderSearchResults(q);
+    }
+    function searchSection(items, renderItem, emptyText, label) {
+        if (!items.length) return `<div class="list-item" style="color:#94a3b8;">${emptyText}</div>`;
+        const more = items.length > SEARCH_LIMIT ? `<div class="search-more">${label} 외 ${items.length - SEARCH_LIMIT}건이 더 있습니다. 해당 메뉴에서 자세히 확인하세요.</div>` : '';
+        return items.slice(0, SEARCH_LIMIT).map(renderItem).join('') + more;
+    }
+    function renderSearchResults(q) {
         document.getElementById('searchKeywordLabel').innerText = q;
-        showView('search');
-        
-        // 호출 로그 검색
-        const flatLogs = getAllCallsFlat();
-        const resLogs = flatLogs.filter(c => 
-            String(c.name||'').toLowerCase().includes(q) || 
-            String(c.id||'').includes(q) || 
-            String(c.teacher||'').toLowerCase().includes(q) || 
-            String(c.purpose||'').toLowerCase().includes(q)
-        );
-        document.getElementById('searchResultLogs').innerHTML = resLogs.length ? 
-            resLogs.map(c => `<div class="list-item clickable" onclick="goToLogFromSearch('${c.room}','${c.dbKey}')">
-                <span><b>[${c.room}]</b> ${c.time||''} | ${c.id} ${c.name} ➔ ${c.teacher||''} (${c.purpose||''})</span>
-                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
-            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 로그가 없습니다.</div>';
-        
-        // 학생 DB 검색
-        const resStudents = Object.entries(masterStudents).filter(([sid, val]) => 
-            sid.includes(q) || String(val.name||val).toLowerCase().includes(q)
-        );
-        document.getElementById('searchResultStudents').innerHTML = resStudents.length ? 
-            resStudents.map(([sid, val]) => `<div class="list-item clickable" onclick="goToStudentFromSearch('${sid}')">
-                <span><b>[${sid}]</b> ${val.name||val}</span>
-                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
-            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 학생이 없습니다.</div>';
-        
-        // 블랙리스트 검색
-        const resBlacklist = masterBlacklist.filter(b => 
-            String(b.id).includes(q) || String(b.name).toLowerCase().includes(q)
-        );
-        document.getElementById('searchResultBlacklist').innerHTML = resBlacklist.length ? 
-            resBlacklist.map(b => `<div class="list-item clickable" onclick="showView('blacklist')">
-                <span><b>[${b.id}]</b> ${b.name} (차단됨)</span>
-                <span style="color:var(--blue); font-size:0.8rem; font-weight:700;">이동 ›</span>
-            </div>`).join('') : '<div class="list-item" style="color:#94a3b8;">일치하는 블랙리스트 항목이 없습니다.</div>';
+        const go = '<span style="color:var(--blue); font-size:0.8rem; font-weight:700; flex-shrink:0;">이동 ›</span>';
+
+        const logs = getAllCallsFlat().filter(c =>
+            String(c.name || '').toLowerCase().includes(q) || String(c.id || '').includes(q) ||
+            String(c.teacher || '').toLowerCase().includes(q) || String(c.purpose || '').toLowerCase().includes(q))
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        document.getElementById('searchResultLogs').innerHTML = searchSection(logs, c =>
+            `<div class="list-item clickable" data-room="${esc(c.room)}" data-key="${esc(c.dbKey)}" onclick="goToLogFromSearch(this.dataset.room, this.dataset.key)">
+                <span><b>[${esc(c.room)}]</b> ${esc(c.time)} | ${esc(c.id)} ${esc(c.name)} ➔ ${esc(c.teacher)} (${esc(c.purpose)})</span>${go}
+            </div>`, '일치하는 로그가 없습니다.', '호출 로그');
+
+        const students = Object.entries(masterStudents).filter(([sid, val]) =>
+            sid.includes(q) || getStudentName(val).toLowerCase().includes(q));
+        document.getElementById('searchResultStudents').innerHTML = searchSection(students, ([sid, val]) =>
+            `<div class="list-item clickable" data-sid="${esc(sid)}" onclick="goToStudentFromSearch(this.dataset.sid)">
+                <span><b>[${esc(sid)}]</b> ${esc(getStudentName(val))}</span>${go}
+            </div>`, '일치하는 학생이 없습니다.', '학생');
+
+        const blacklist = masterBlacklist.filter(b => String(b.id).includes(q) || String(b.name).toLowerCase().includes(q));
+        document.getElementById('searchResultBlacklist').innerHTML = searchSection(blacklist, b =>
+            `<div class="list-item clickable" onclick="showView('blacklist')">
+                <span><b>[${esc(b.id)}]</b> ${esc(b.name)} (차단됨)</span>${go}
+            </div>`, '일치하는 블랙리스트 항목이 없습니다.', '블랙리스트');
+    }
+    // 데이터가 바뀌면 열려 있는 검색 결과도 함께 갱신
+    function refreshSearchIfOpen() {
+        if (currentView !== 'search') return;
+        const q = document.getElementById('globalSearchInput').value.trim().toLowerCase();
+        if (q) renderSearchResults(q);
     }
 
     function goToLogFromSearch(room, dbKey) {
-        // 호출 로그 페이지로 이동하면서 해당 로그가 보이도록 필터 초기화
         activeGradeTab = '전체';
         activeRoomTab = '전체';
         renderGradeTabs(); renderRoomTabs();
         document.getElementById('statusFilter').value = 'all';
         document.getElementById('sortFilter').value = 'newest';
         document.getElementById('logSearchInput').value = '';
+        // 해당 로그가 있는 페이지로 이동
+        const flat = getFilteredLogs();
+        const idx = flat.findIndex(c => c.room === room && c.dbKey === dbKey);
+        logPaging.page = idx >= 0 ? Math.floor(idx / logPaging.size) + 1 : 1;
         showView('logs');
         renderLogTable();
         setTimeout(() => {
-            const rows = document.querySelectorAll('#logTableBody tr');
-            rows.forEach(tr => {
+            document.querySelectorAll('#logTableBody tr').forEach(tr => {
                 const cb = tr.querySelector('.log-check');
                 if (cb && cb.value === `${room}|${dbKey}`) {
                     tr.style.outline = '2px solid var(--blue)';
@@ -731,6 +747,7 @@
     function goToStudentFromSearch(sid) {
         showView('studentdb');
         document.getElementById('mStudentSearch').value = sid;
+        studentPaging.page = 1;
         renderMasterStudentList();
     }
 
@@ -767,7 +784,8 @@
 
     // ===================== 전역 데이터 =====================
     let allRoomsData = {};
-    let roomSystemStatus = {}; // { [room]: { mode, message } }
+    let roomSystemStatus = {};       // { [room]: { mode, message, overrideWindow } }
+    let autoShutdownSchedules = {};  // { [room]: { enabled, startHour, startMin, endHour, endMin } }
     let widgetConfig = [
         { key: 'todaySummary', label: '오늘의 운영 요약', visible: true },
         { key: 'deviceStatus', label: '각 태블릿 기기 상태', visible: true }
@@ -787,17 +805,15 @@
             allRoomsData[room] = { calls: [], seatLayout: { rows:0, cols:0, seats:{} }, notice: {}, heartbeat: {}, settings: {} };
             roomSystemStatus[room] = { mode: 'normal', message: '' };
             
-            // 자동 종료 스케줄 로드
             db.ref(`rooms/${room}/autoShutdownSchedule`).on('value', snap => {
-                const sch = snap.val();
-                if (sch) autoShutdownSchedules[room] = sch;
+                autoShutdownSchedules[room] = snap.val();
                 renderOpsStatus();
             });
-            
+
             db.ref(`rooms/${room}/calls`).on('value', snap => {
                 const callsObj = snap.val() || {};
                 allRoomsData[room].calls = Object.keys(callsObj).map(key => Object.assign({ dbKey: key }, callsObj[key]));
-                renderOverview(); renderLogTable();
+                renderOverview(); renderLogTable(); refreshSearchIfOpen();
             });
             db.ref(`rooms/${room}/seatLayout`).on('value', snap => {
                 allRoomsData[room].seatLayout = snap.val() || {rows:0,cols:0,seats:{}};
@@ -819,8 +835,8 @@
             });
         });
 
-        db.ref('shared/blacklist').on('value', snap => { masterBlacklist = snap.val() || []; renderMasterBlacklist(); });
-        db.ref('shared/students').on('value', snap => { masterStudents = snap.val() || {}; renderMasterStudentList(); });
+        db.ref('shared/blacklist').on('value', snap => { masterBlacklist = snap.val() || []; renderMasterBlacklist(); refreshSearchIfOpen(); });
+        db.ref('shared/students').on('value', snap => { masterStudents = snap.val() || {}; renderMasterStudentList(); refreshSearchIfOpen(); });
         db.ref('shared/masterWidgetConfig').on('value', snap => {
             const v = snap.val();
             if (v && v.length) widgetConfig = v;
@@ -831,9 +847,7 @@
         renderRoomTabs();
         renderSeatRoomTabs();
         setInterval(renderDeviceStatus, 15000);
-        
-        // 자동 운영 종료 스케줄 시작
-        initAutoShutdown();
+        setInterval(refreshOpsBadges, 20000);
     }
 
     function checkDeviceAlerts(room) {
@@ -856,17 +870,6 @@
         setTimeout(() => toast.remove(), 5000);
     }
 
-    function parseToYYYYMMDD(str) {
-        if(!str) return "";
-        str = String(str).trim();
-        if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
-        let m = str.match(/(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
-        if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-        let d = new Date(str);
-        if(!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        return "";
-    }
-
     function renderOverview() {
         const grid = document.getElementById('overviewRoomGrid');
         const showSummary = widgetConfig.find(w => w.key === 'todaySummary')?.visible !== false;
@@ -886,9 +889,9 @@
             const el = document.createElement('div');
             el.className = 'room-stat-card';
             el.innerHTML = `
-                <div class="room-name">${room}</div>
+                <div class="room-name">${esc(room)}</div>
                 <div class="mini-row"><span>오늘 총 호출</span><b>${todayCalls.length}건</b></div>
-                <div class="mini-row"><span>최다 호출 교사</span><b>${topTeacher !== '-' ? topTeacher + ' (' + maxC + ')' : '-'}</b></div>
+                <div class="mini-row"><span>최다 호출 교사</span><b>${topTeacher !== '-' ? esc(topTeacher) + ' (' + maxC + ')' : '-'}</b></div>
                 <div class="mini-row"><span>미처리 호출</span><b style="color:${unresolved > 0 ? '#dc2626' : '#15803d'};">${unresolved}건</b></div>
             `;
             grid.appendChild(el);
@@ -915,60 +918,6 @@
                 <div class="mini-row"><span>대시보드</span><span class="device-pill ${dashOnline?'online':'offline'}">${dashOnline?'온라인':'오프라인'}</span></div>
             `;
             grid.appendChild(el);
-        });
-    }
-
-    function renderAutoShutdown() {
-        const box = document.getElementById('autoShutdownBox');
-        if (!box) return;
-        
-        const days = ['월', '화', '수', '목', '금', '토', '일'];
-        let html = '<div style="display: grid; gap: 14px;">';
-        
-        days.forEach((day, idx) => {
-            const dayKey = `shutdown_${idx}`;
-            const current = autoShutdownSettings[dayKey] || { enabled: false, time: '18:00' };
-            html += `
-                <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid var(--line);">
-                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
-                        <input type="checkbox" id="shutdown_enable_${idx}" ${current.enabled ? 'checked' : ''} onchange="toggleShutdown(${idx})">
-                        <span style="min-width: 30px;">${day}요일</span>
-                    </label>
-                    <input type="time" id="shutdown_time_${idx}" value="${current.time}" style="flex: 1; padding: 8px; border: 1px solid var(--line); border-radius: 8px;" ${current.enabled ? '' : 'disabled'}>
-                    <button class="btn gray" style="font-size: 0.8rem; padding: 8px 12px;" onclick="saveShutdownSettings()">저장</button>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        box.innerHTML = html;
-    }
-
-    let autoShutdownSettings = {};
-    
-    function loadAutoShutdownSettings() {
-        db.ref('shared/autoShutdown').on('value', snap => {
-            autoShutdownSettings = snap.val() || {};
-            renderAutoShutdown();
-        });
-    }
-    
-    function toggleShutdown(dayIdx) {
-        const checkbox = document.getElementById(`shutdown_enable_${dayIdx}`);
-        const timeInput = document.getElementById(`shutdown_time_${dayIdx}`);
-        timeInput.disabled = !checkbox.checked;
-    }
-    
-    function saveShutdownSettings() {
-        const days = ['월', '화', '수', '목', '금', '토', '일'];
-        const settings = {};
-        days.forEach((_, idx) => {
-            const enabled = document.getElementById(`shutdown_enable_${idx}`).checked;
-            const time = document.getElementById(`shutdown_time_${idx}`).value;
-            settings[`shutdown_${idx}`] = { enabled, time };
-        });
-        db.ref('shared/autoShutdown').set(settings).then(() => {
-            alert('자동 운영 종료 설정이 저장되었습니다.');
         });
     }
 
@@ -1033,7 +982,7 @@
             const b = document.createElement('button');
             b.className = 'tab-btn' + (g === activeGradeTab ? ' active' : '');
             b.innerText = g;
-            b.onclick = () => { activeGradeTab = g; renderGradeTabs(); renderLogTable(); };
+            b.onclick = () => { activeGradeTab = g; renderGradeTabs(); resetLogPageAndRender(); };
             row.appendChild(b);
         });
     }
@@ -1045,7 +994,7 @@
             const b = document.createElement('button');
             b.className = 'tab-btn' + (r === activeRoomTab ? ' active' : '');
             b.innerText = r;
-            b.onclick = () => { activeRoomTab = r; renderRoomTabs(); renderLogTable(); };
+            b.onclick = () => { activeRoomTab = r; renderRoomTabs(); resetLogPageAndRender(); };
             row.appendChild(b);
         });
     }
@@ -1092,21 +1041,25 @@
     function renderLogTable() {
         const flat = getFilteredLogs();
         document.getElementById('logCountLabel').innerText = `${flat.length}개의 로그`;
-        const body = document.getElementById('logTableBody');
-        
         document.getElementById('selectAllLogs').checked = false;
 
-        body.innerHTML = flat.map(c => {
+        const start = (logPaging.page - 1) * logPaging.size;
+        const pageRows = flat.slice(start, start + logPaging.size);
+        document.getElementById('logTableBody').innerHTML = pageRows.map(c => {
             const st = c.status || '미출력';
-            const unresolvedClass = st === '미출력' ? 'unresolved' : '';
             const stClass = st === '출력 완료' ? 'st-done' : (st === '부재중 처리' ? 'st-absent' : 'st-pending');
-            return `<tr class="${unresolvedClass}">
-                <td style="text-align: center;"><input type="checkbox" class="log-check" value="${c.room}|${c.dbKey}"></td>
-                <td>${c.time || ''}</td><td>${c.room}</td><td>${c.teacher||''}</td><td>${c.id||''}</td><td>${c.name||''}</td><td>${c.purpose||''}</td>
-                <td><span class="status-badge ${stClass}">${st}</span></td>
+            return `<tr class="${st === '미출력' ? 'unresolved' : ''}">
+                <td class="check-cell" style="text-align: center;"><input type="checkbox" class="log-check" value="${esc(c.room)}|${esc(c.dbKey)}"></td>
+                <td data-label="날짜/시간">${esc(c.time)}</td><td data-label="교무실">${esc(c.room)}</td><td data-label="선생님">${esc(c.teacher)}</td>
+                <td data-label="학번">${esc(c.id)}</td><td data-label="이름">${esc(c.name)}</td><td data-label="목적">${esc(c.purpose)}</td>
+                <td data-label="상태"><span class="status-badge ${stClass}">${esc(st)}</span></td>
             </tr>`;
-        }).join('') || `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:30px;">조건에 맞는 로그가 없습니다.</td></tr>`;
+        }).join('') || `<tr><td colspan="8" class="empty-cell" style="text-align:center; color:#94a3b8; padding:30px;">조건에 맞는 로그가 없습니다.</td></tr>`;
+        renderPager('logPager', 'logs', logPaging, flat.length, renderLogTable);
     }
+
+    // 검색/필터가 바뀌면 1페이지부터 다시 보여준다
+    function resetLogPageAndRender() { logPaging.page = 1; renderLogTable(); }
 
     function refreshLogTable() {
         renderLogTable();
@@ -1173,7 +1126,7 @@
         if (masterBlacklist.length === 0) { box.innerHTML = '<div class="list-item">차단된 학생이 없습니다.</div>'; return; }
         box.innerHTML = masterBlacklist.map((b, idx) => {
             const periodStr = b.endDate ? `${b.startDate || ''}~${b.endDate}` : (b.period || '영구 차단');
-            return `<div class="list-item"><span>[${b.id}] ${b.name} (${periodStr})</span><button class="btn gray" onclick="masterLiftBlacklist(${idx})">해제</button></div>`;
+            return `<div class="list-item"><span>[${esc(b.id)}] ${esc(b.name)} (${esc(periodStr)})</span><button class="btn gray" onclick="masterLiftBlacklist(${idx})">해제</button></div>`;
         }).join('');
     }
     function masterAddBlacklist() {
@@ -1199,32 +1152,35 @@
         const box = document.getElementById('mStudentBox');
         if (!box) return;
         const q = (document.getElementById('mStudentSearch').value || '').trim().toLowerCase();
-        const grade = (document.getElementById('mStudentGrade')?.value || 'all');
-        const sortMode = (document.getElementById('mStudentSort')?.value || 'id');
+        const grade = document.getElementById('mStudentGrade').value;
+        const sortMode = document.getElementById('mStudentSort').value;
 
-        let entries = Object.entries(masterStudents).map(([sid, val]) => {
-            if (typeof val === 'object' && val !== null) return { sid, name: val.name || '', createdAt: val.createdAt || 0 };
-            return { sid, name: String(val), createdAt: 0 };
-        });
-
+        let entries = Object.entries(masterStudents).map(([sid, val]) => ({ sid, name: getStudentName(val), createdAt: (val && val.createdAt) || 0 }));
         if (q) entries = entries.filter(e => e.sid.includes(q) || e.name.toLowerCase().includes(q));
         if (grade !== 'all') entries = entries.filter(e => e.sid[0] === grade);
 
-        if (sortMode === 'id') entries.sort((a,b) => parseInt(a.sid)-parseInt(b.sid));
-        else if (sortMode === 'newest') entries.sort((a,b) => b.createdAt - a.createdAt);
-        else entries.sort((a,b) => a.createdAt - b.createdAt);
+        if (sortMode === 'id') entries.sort((a, b) => parseInt(a.sid) - parseInt(b.sid));
+        else if (sortMode === 'newest') entries.sort((a, b) => b.createdAt - a.createdAt);
+        else entries.sort((a, b) => a.createdAt - b.createdAt);
 
-        if (entries.length === 0) { box.innerHTML = '<div class="list-item">등록된 학생이 없습니다.</div>'; return; }
-        box.innerHTML = entries.map(e =>
-            `<div class="list-item">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                    <input type="checkbox" class="student-check" value="${e.sid}">
-                    <span>[${e.sid}] ${e.name}</span>
+        document.getElementById('mStudentSelectAll').checked = false;
+        const start = (studentPaging.page - 1) * studentPaging.size;
+        const pageRows = entries.slice(start, start + studentPaging.size);
+
+        box.innerHTML = pageRows.length ? pageRows.map(e => `
+            <div class="list-item">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; min-width:0;">
+                    <input type="checkbox" class="student-check" value="${esc(e.sid)}">
+                    <span>
+                        <span>[${esc(e.sid)}] ${esc(e.name)}</span>
+                        <div class="student-meta">${e.createdAt ? '등록 ' + formatDateTime(e.createdAt) : '등록일 정보 없음'}</div>
+                    </span>
                 </label>
-                <button class="btn gray" onclick="masterDeleteStudent('${e.sid}')">삭제</button>
-            </div>`
-        ).join('');
+                <button class="btn gray" data-sid="${esc(e.sid)}" onclick="masterDeleteStudent(this.dataset.sid)">삭제</button>
+            </div>`).join('') : '<div class="list-item">등록된 학생이 없습니다.</div>';
+        renderPager('studentPager', 'students', studentPaging, entries.length, renderMasterStudentList);
     }
+    function resetStudentPageAndRender() { studentPaging.page = 1; renderMasterStudentList(); }
     function toggleSelectAllStudents() {
         const checked = document.getElementById('mStudentSelectAll').checked;
         document.querySelectorAll('.student-check').forEach(cb => { cb.checked = checked; });
@@ -1243,7 +1199,8 @@
         const name = document.getElementById('mStudentName').value.trim();
         if (id.length !== 5 || isNaN(id)) { alert('학번 5자리를 입력하세요.'); return; }
         if (!name) { alert('이름을 입력하세요.'); return; }
-        db.ref(`shared/students/${id}`).set({ name, createdAt: Date.now() });
+        const known = masterStudents[id];
+        db.ref(`shared/students/${id}`).set({ name, createdAt: (known && known.createdAt) || Date.now() });
         document.getElementById('mStudentId').value = '';
         document.getElementById('mStudentName').value = '';
     }
@@ -1291,8 +1248,8 @@
 
                 if (filled) {
                     cell.innerHTML = `
-                        <b>${seat.name}</b>
-                        ${seat.subtitle ? `<div class="sub">${seat.subtitle}</div>` : ''}
+                        <b>${esc(seat.name)}</b>
+                        ${seat.subtitle ? `<div class="sub">${esc(seat.subtitle)}</div>` : ''}
                         <div class="seat-btn-row">
                             <button style="background:#e0f2fe;color:#0369a1;" onclick="event.stopPropagation(); masterOpenSeatModal('${key}')">수정</button>
                             <button style="background:#f1f5f9;color:#334155;" onclick="event.stopPropagation(); masterStartMoveSeat('${key}')">이동</button>
@@ -1378,9 +1335,9 @@
             const wrap = document.createElement('div');
             wrap.style.marginBottom = '18px';
             wrap.innerHTML = `
-                <span class="input-label">${room}</span>
-                <input type="text" class="form-input" id="notice_${room}" value="${(notice.text||'').replace(/"/g,'&quot;')}" placeholder="공지 내용 (비우면 배너가 사라집니다)">
-                <button class="btn" onclick="saveNotice('${room}')">이 교무실에 반영</button>
+                <span class="input-label">${esc(room)}</span>
+                <input type="text" class="form-input" id="notice_${esc(room)}" value="${esc(notice.text)}" placeholder="공지 내용 (비우면 배너가 사라집니다)">
+                <button class="btn" data-room="${esc(room)}" onclick="saveNotice(this.dataset.room)">이 교무실에 반영</button>
             `;
             box.appendChild(wrap);
         });
@@ -1391,229 +1348,117 @@
         alert(`${room} 공지사항이 반영되었습니다.`);
     }
 
-    const OPS_LABEL_MAP = { normal: '정상 운영 중', maintenance: '점검 중', closed: '운영 종료' };
-    let autoShutdownSchedules = {}; // { [room]: { startHour, startMin, endHour, endMin, enabled } }
+    // ===================== 운영 제어 =====================
+    // 자동 운영 종료 시간대는 각 태블릿(index/dashboard)이 직접 계산해 적용한다 (common.js 의 effectiveStatus).
+    // 그래서 이 화면이 꺼져 있어도 동작하고, 여기서는 설정만 저장한다.
+    const MODE_LABEL = { normal: '정상 운영 중', maintenance: '점검 중', closed: '운영 종료' };
+    const MODE_CLASS = { normal: 'status-normal', maintenance: 'status-maintenance', closed: 'status-closed' };
+    const hhmm = (h, m) => `${pad2(h ?? 0)}:${pad2(m ?? 0)}`;
 
-    function initAutoShutdown() {
-        // 매분 체크해서 시간이 되면 자동으로 운영 종료/재개
-        setInterval(() => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMin = now.getMinutes();
-            
-            ROOM_LIST.forEach(room => {
-                const sch = autoShutdownSchedules[room];
-                if (!sch || !sch.enabled) return;
-                
-                const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
-                const isInShutdownPeriod = (currentHour > sch.startHour || (currentHour === sch.startHour && currentMin >= sch.startMin)) &&
-                                         (currentHour < sch.endHour || (currentHour === sch.endHour && currentMin < sch.endMin));
-                
-                if (isInShutdownPeriod && cur.mode !== 'closed') {
-                    // 운영 종료 시간이므로 상태를 closed로 변경
-                    cur.mode = 'closed';
-                    cur.message = cur.message || '운영 시간이 종료되었습니다.';
-                    db.ref(`rooms/${room}/systemStatus`).set(cur);
-                } else if (!isInShutdownPeriod && cur.mode === 'closed' && (cur.message || '').includes('운영 시간')) {
-                    // 운영 시간이 다시 시작되므로 상태를 normal로 변경
-                    cur.mode = 'normal';
-                    cur.message = '';
-                    db.ref(`rooms/${room}/systemStatus`).set(cur);
-                }
-            });
-        }, 60000); // 1분마다 체크
+    function roomEffectiveStatus(room) { return effectiveStatus(roomSystemStatus[room], autoShutdownSchedules[room]); }
+
+    function refreshOpsBadges() {
+        document.querySelectorAll('[data-badge-room]').forEach(el => {
+            const eff = roomEffectiveStatus(el.dataset.badgeRoom);
+            el.className = 'room-status-badge ' + MODE_CLASS[eff.mode];
+            el.innerText = eff.auto ? '자동 종료 시간대' : MODE_LABEL[eff.mode];
+        });
+        const nonNormal = ROOM_LIST.map(r => [r, roomEffectiveStatus(r)]).filter(([, e]) => e.mode !== 'normal')
+            .map(([r, e]) => `${r}(${e.auto ? '자동 운영 종료' : MODE_LABEL[e.mode]})`);
+        const banner = document.getElementById('maintBanner');
+        banner.style.display = nonNormal.length ? 'block' : 'none';
+        banner.innerText = nonNormal.length ? `현재 일부 기기가 정상 운영 중이 아닙니다: ${nonNormal.join(', ')}` : '';
     }
 
     function renderOpsStatus() {
+        refreshOpsBadges();
         const box = document.getElementById('opsRoomBox');
         if (!box) return;
-        
-        box.innerHTML = '';
-        
-        // ============== 모든 기기 일괄 제어 섹션 ==============
-        let bulkControlHTML = `
-            <div class="card" style="margin-bottom:20px; background:linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%); border:2px solid #bfdbfe;">
-                <h3 style="color:#0c4a6e; font-size:1.15rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.3rem;">🎛️</span> 모든 기기 일괄 제어
-                </h3>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px;">
-                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #bfdbfe;">
-                        <div style="font-size:0.75rem; color:#0284c7; font-weight:700; margin-bottom:6px;">모든 기기</div>
-                        <button class="btn gray" style="font-size:0.8rem; padding:10px; width:100%; border:2px solid #059669; color:#059669; font-weight:700;" onclick="bulkSetAllDevices('normal')">✓ 정상 운영</button>
-                    </div>
-                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #fbbf24;">
-                        <div style="font-size:0.75rem; color:#d97706; font-weight:700; margin-bottom:6px;">모든 기기</div>
-                        <button class="btn" style="font-size:0.8rem; padding:10px; width:100%; background:#f59e0b; color:white; font-weight:700;" onclick="bulkSetAllDevices('maintenance')">🔧 점검 중</button>
-                    </div>
-                    <div style="padding:10px; background:white; border-radius:12px; border:1px solid #ef4444;">
-                        <div style="font-size:0.75rem; color:#dc2626; font-weight:700; margin-bottom:6px;">모든 기기</div>
-                        <button class="btn danger" style="font-size:0.8rem; padding:10px; width:100%; font-weight:700;" onclick="bulkSetAllDevices('closed')">🌙 운영 종료</button>
-                    </div>
+        // 입력 중에 다른 곳의 변경 때문에 화면이 다시 그려져 내용이 지워지는 일을 막는다
+        if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
+
+        const bulk = `
+            <div class="card" style="background:#eff6ff; border-color:#bfdbfe;">
+                <h3 style="color:#0c4a6e;">🎛️ 모든 교무실 일괄 제어</h3>
+                <div class="ops-btns">
+                    <button class="btn gray" onclick="bulkSetAllDevices('normal')">✓ 정상 운영</button>
+                    <button class="btn" style="background:#f59e0b;" onclick="bulkSetAllDevices('maintenance')">🔧 점검 중</button>
+                    <button class="btn danger" onclick="bulkSetAllDevices('closed')">🌙 운영 종료</button>
                 </div>
-            </div>
-        `;
-        
-        box.innerHTML = bulkControlHTML;
-        
-        // ============== 학년별 태블릿 개별 제어 (학생용 + 대시보드용 분리) ==============
-        let anyNonNormal = [];
-        
-        ROOM_LIST.forEach(room => {
+            </div>`;
+
+        const rooms = ROOM_LIST.map(room => {
             const st = roomSystemStatus[room] || { mode: 'normal', message: '' };
-            if (st.mode !== 'normal') anyNonNormal.push(`${room}(${OPS_LABEL_MAP[st.mode]})`);
-            
-            const safeRoomId = room.replace(/\s/g, '_');
-            const roomCard = document.createElement('div');
-            roomCard.className = 'card';
-            roomCard.style.marginBottom = '20px';
-            
-            // 상태 뱃지 스타일 결정
-            let statusClass = 'status-normal';
-            let statusLabel = '정상 운영 중';
-            if (st.mode === 'maintenance') {
-                statusClass = 'status-maintenance';
-                statusLabel = '점검 중';
-            } else if (st.mode === 'closed') {
-                statusClass = 'status-closed';
-                statusLabel = '운영 종료';
-            }
-            
             const sch = autoShutdownSchedules[room] || { enabled: false, startHour: 18, startMin: 0, endHour: 9, endMin: 0 };
-
-            roomCard.innerHTML = `
-                <h3 style="margin-bottom:16px; font-size:1.1rem;">
-                    ${room}
-                    <span class="room-status-badge ${statusClass}">${statusLabel}</span>
-                </h3>
-
-                <!-- 학생용/대시보드용 태블릿 제어: 2열로 배치하고 꽉 찬 색상 대신 좌측 라인 강조만 사용 -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-bottom:14px;">
-                    <div style="background:#fff; border:1px solid var(--line); border-left:4px solid #2563eb; border-radius:12px; padding:14px;">
-                        <div style="font-size:0.9rem; font-weight:700; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                            <span>📱</span> 학생용 태블릿 (index.html)
-                        </div>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-                            <button class="btn gray" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','index','normal')">✓ 정상 운영</button>
-                            <button class="btn" style="font-size:0.78rem; padding:8px 12px; background:#f59e0b;" onclick="setDeviceSystemStatus('${room}','index','maintenance')">🔧 점검 중</button>
-                            <button class="btn danger" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','index','closed')">🌙 운영 종료</button>
-                        </div>
-                        <span class="input-label" style="margin-bottom:6px;">학생 화면 안내 문구</span>
-                        <input type="text" id="opsMsg_${safeRoomId}_index" class="form-input" style="margin-bottom:8px;" value="${(st.message||'').replace(/"/g,'&quot;')}" placeholder="예: 정기 점검 중입니다. 잠시 후 다시 이용해주세요.">
-                        <button class="btn gray" style="font-size:0.78rem;" onclick="saveDeviceOpsMessage('${room}','index')">문구 저장</button>
+            return `
+            <div class="card room-ops-card" data-room="${esc(room)}">
+                <h3>${esc(room)} <span class="room-status-badge" data-badge-room="${esc(room)}"></span></h3>
+                <div class="ops-box">
+                    <div class="ops-title">운영 상태 <span class="ops-sub">학생용 화면과 선생님 대시보드에 함께 적용</span></div>
+                    <div class="ops-btns">
+                        <button class="btn gray" onclick="setRoomMode(this, 'normal')">✓ 정상 운영</button>
+                        <button class="btn" style="background:#f59e0b;" onclick="setRoomMode(this, 'maintenance')">🔧 점검 중</button>
+                        <button class="btn danger" onclick="setRoomMode(this, 'closed')">🌙 운영 종료</button>
                     </div>
-
-                    <div style="background:#fff; border:1px solid var(--line); border-left:4px solid #2563eb; border-radius:12px; padding:14px;">
-                        <div style="font-size:0.9rem; font-weight:700; color:#2563eb; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                            <span>📊</span> 선생님 대시보드 (dashboard.html)
-                        </div>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-                            <button class="btn gray" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','dashboard','normal')">✓ 정상 운영</button>
-                            <button class="btn" style="font-size:0.78rem; padding:8px 12px; background:#f59e0b;" onclick="setDeviceSystemStatus('${room}','dashboard','maintenance')">🔧 점검 중</button>
-                            <button class="btn danger" style="font-size:0.78rem; padding:8px 12px;" onclick="setDeviceSystemStatus('${room}','dashboard','closed')">🌙 운영 종료</button>
-                        </div>
-                        <span class="input-label" style="margin-bottom:6px;">선생님 화면 안내 문구</span>
-                        <input type="text" id="opsMsg_${safeRoomId}_dashboard" class="form-input" style="margin-bottom:8px;" value="${(st.message||'').replace(/"/g,'&quot;')}" placeholder="예: 정기 점검 중입니다. 잠시 후 다시 이용해주세요.">
-                        <button class="btn gray" style="font-size:0.78rem;" onclick="saveDeviceOpsMessage('${room}','dashboard')">문구 저장</button>
-                    </div>
+                    <span class="input-label">점검 · 종료 화면 안내 문구</span>
+                    <input type="text" class="form-input ops-msg" value="${esc(st.message)}" placeholder="예: 정기 점검 중입니다. 잠시 후 다시 이용해주세요.">
+                    <button class="btn gray" onclick="saveRoomMessage(this)">문구 저장</button>
                 </div>
-
-                <!-- 자동 운영 종료 시간대 (몇 시부터 몇 시까지) -->
-                <div style="background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="toggleAutoShutdownSection('${safeRoomId}')">
-                        <span style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
-                            ⏰ 자동 운영 종료 시간대${sch.enabled ? ' <span class="status-badge st-pending">사용 중</span>' : ''}
-                        </span>
-                        <span id="arrow_${safeRoomId}" style="transition:transform .2s; display:inline-block; color:var(--sub);">▾</span>
+                <div class="ops-box" style="margin-top:12px;">
+                    <div class="ops-title">⏰ 자동 운영 종료 시간대</div>
+                    <label class="ops-check"><input type="checkbox" class="sch-enabled" ${sch.enabled ? 'checked' : ''}> 이 시간대에는 자동으로 운영 종료</label>
+                    <div class="ops-time-row">
+                        <label>종료 시작<input type="time" class="form-input sch-start" value="${hhmm(sch.startHour, sch.startMin)}"></label>
+                        <span>→</span>
+                        <label>운영 재개<input type="time" class="form-input sch-end" value="${hhmm(sch.endHour, sch.endMin)}"></label>
                     </div>
-                    <div id="autoShutdownContent_${safeRoomId}" style="overflow:hidden; max-height:0px; opacity:0; transition:all .25s;">
-                        <div style="padding-top:12px; display:flex; flex-direction:column; gap:10px;">
-                            <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                                <input type="checkbox" id="autoShutdown_${safeRoomId}" ${sch.enabled ? 'checked' : ''}> 이 시간대에는 자동으로 운영 종료 처리
-                            </label>
-                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:0.85rem;">
-                                <span>종료</span>
-                                <input type="number" id="shutdownStart_h_${safeRoomId}" min="0" max="23" value="${sch.startHour ?? 18}" class="form-input" style="width:56px; padding:6px; text-align:center;">시
-                                <input type="number" id="shutdownStart_m_${safeRoomId}" min="0" max="59" value="${sch.startMin ?? 0}" class="form-input" style="width:56px; padding:6px; text-align:center;">분
-                                <span>~ 재개</span>
-                                <input type="number" id="shutdownEnd_h_${safeRoomId}" min="0" max="23" value="${sch.endHour ?? 9}" class="form-input" style="width:56px; padding:6px; text-align:center;">시
-                                <input type="number" id="shutdownEnd_m_${safeRoomId}" min="0" max="59" value="${sch.endMin ?? 0}" class="form-input" style="width:56px; padding:6px; text-align:center;">분
-                            </div>
-                            <button class="btn gray" style="font-size:0.8rem; align-self:flex-start;" onclick="saveAutoShutdownSchedule('${room}')">저장</button>
-                        </div>
-                    </div>
+                    <p class="ops-hint">밤을 넘기는 시간대(예: 18:00 → 다음날 09:00)도 됩니다. 태블릿이 직접 시간을 확인하므로 이 화면을 꺼 두어도 적용돼요. 시간대 안에서 "정상 운영"을 누르면 그 시간대만 해제됩니다.</p>
+                    <button class="btn gray" onclick="saveAutoShutdownSchedule(this)">시간대 저장</button>
                 </div>
-            `;
-            box.appendChild(roomCard);
-        });
-        
-        const banner = document.getElementById('maintBanner');
-        if (anyNonNormal.length) {
-            banner.style.display = 'block';
-            banner.innerText = `현재 일부 기기가 정상 운영 중이 아닙니다: ${anyNonNormal.join(', ')}`;
-        } else banner.style.display = 'none';
+            </div>`;
+        }).join('');
+
+        box.innerHTML = bulk + rooms;
+        refreshOpsBadges();
         renderDeviceReloadCards();
     }
-    function setDeviceSystemStatus(room, device, mode) {
-        const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
-        cur.mode = mode;
-        db.ref(`rooms/${room}/systemStatus`).set(cur);
-    }
-    
-    function bulkSetAllDevices(mode) {
-        const modeLabel = { normal: '정상 운영', maintenance: '점검 중', closed: '운영 종료' }[mode];
-        if (!confirm(`모든 기기를 "${modeLabel}" 상태로 변경하시겠습니까?`)) return;
-        
-        ROOM_LIST.forEach(room => {
-            const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
-            cur.mode = mode;
-            db.ref(`rooms/${room}/systemStatus`).set(cur);
-        });
-        
-        alert(`모든 기기가 "${modeLabel}" 상태로 변경되었습니다.`);
-    }
-    
-    function saveDeviceOpsMessage(room, device) {
-        const safeRoomId = room.replace(/\s/g, '_');
-        const cur = roomSystemStatus[room] || { mode: 'normal', message: '' };
-        cur.message = document.getElementById('opsMsg_' + safeRoomId + '_' + device).value;
-        db.ref(`rooms/${room}/systemStatus`).set(cur);
-        alert(`${room} 안내 문구가 저장되었습니다.`);
-    }
-    
-    function toggleAutoShutdownSection(safeRoomId) {
-        const content = document.getElementById(`autoShutdownContent_${safeRoomId}`);
-        const arrow = document.getElementById(`arrow_${safeRoomId}`);
-        const checkbox = document.getElementById(`autoShutdown_${safeRoomId}`);
-        
-        if (content.style.maxHeight === '0px') {
-            content.style.maxHeight = '500px';
-            content.style.opacity = '1';
-            arrow.style.transform = 'rotate(0deg)';
-        } else {
-            content.style.maxHeight = '0px';
-            content.style.opacity = '0';
-            arrow.style.transform = 'rotate(-90deg)';
-        }
-    }
 
-    function saveAutoShutdownSchedule(room) {
-        const safeRoomId = room.replace(/\s/g, '_');
-        const enabled = document.getElementById(`autoShutdown_${safeRoomId}`).checked;
-        const startHour = parseInt(document.getElementById(`shutdownStart_h_${safeRoomId}`).value) || 18;
-        const startMin = parseInt(document.getElementById(`shutdownStart_m_${safeRoomId}`).value) || 0;
-        const endHour = parseInt(document.getElementById(`shutdownEnd_h_${safeRoomId}`).value) || 9;
-        const endMin = parseInt(document.getElementById(`shutdownEnd_m_${safeRoomId}`).value) || 0;
-        
-        if (startHour < 0 || startHour > 23 || startMin < 0 || startMin > 59 ||
-            endHour < 0 || endHour > 23 || endMin < 0 || endMin > 59) {
-            alert('시간 입력이 올바르지 않습니다. (시: 0-23, 분: 0-59)');
-            return;
-        }
-        
-        const schedule = { startHour, startMin, endHour, endMin, enabled };
-        autoShutdownSchedules[room] = schedule;
-        db.ref(`rooms/${room}/autoShutdownSchedule`).set(schedule);
-        alert(`${room} 자동 종료 설정이 저장되었습니다.\n종료: ${String(startHour).padStart(2,'0')}:${String(startMin).padStart(2,'0')} ~ 재개: ${String(endHour).padStart(2,'0')}:${String(endMin).padStart(2,'0')}`);
+    // 수동 상태 변경. 자동 종료 시간대 안에서 '정상 운영'을 누르면 그 시간대만 자동 종료를 건너뛴다.
+    function buildStatus(room, mode, message) {
+        const cur = roomSystemStatus[room] || {};
+        const w = getScheduleWindow(autoShutdownSchedules[room]);
+        return {
+            mode,
+            message: message ?? cur.message ?? '',
+            overrideWindow: (mode === 'normal' && w.inWindow) ? w.windowKey : null
+        };
+    }
+    function setRoomMode(btn, mode) {
+        const room = btn.closest('.room-ops-card').dataset.room;
+        db.ref(`rooms/${room}/systemStatus`).set(buildStatus(room, mode));
+    }
+    function saveRoomMessage(btn) {
+        const card = btn.closest('.room-ops-card');
+        const room = card.dataset.room;
+        const cur = roomSystemStatus[room] || { mode: 'normal' };
+        db.ref(`rooms/${room}/systemStatus`).set(Object.assign(buildStatus(room, cur.mode || 'normal', card.querySelector('.ops-msg').value), { overrideWindow: cur.overrideWindow ?? null }))
+            .then(() => alert(`${room} 안내 문구가 저장되었습니다.`));
+    }
+    function bulkSetAllDevices(mode) {
+        if (!confirm(`모든 교무실을 "${MODE_LABEL[mode]}" 상태로 변경하시겠습니까?`)) return;
+        ROOM_LIST.forEach(room => db.ref(`rooms/${room}/systemStatus`).set(buildStatus(room, mode)));
+    }
+    function saveAutoShutdownSchedule(btn) {
+        const card = btn.closest('.room-ops-card');
+        const room = card.dataset.room;
+        const [startHour, startMin] = (card.querySelector('.sch-start').value || '').split(':').map(Number);
+        const [endHour, endMin] = (card.querySelector('.sch-end').value || '').split(':').map(Number);
+        const enabled = card.querySelector('.sch-enabled').checked;
+        if ([startHour, startMin, endHour, endMin].some(n => isNaN(n))) { alert('시작·재개 시각을 모두 입력해 주세요.'); return; }
+        if (enabled && startHour === endHour && startMin === endMin) { alert('시작 시각과 재개 시각이 같으면 안 됩니다.'); return; }
+        const schedule = { enabled, startHour, startMin, endHour, endMin };
+        db.ref(`rooms/${room}/autoShutdownSchedule`).set(schedule)
+            .then(() => alert(`${room} 자동 운영 종료 설정이 저장되었습니다.\n${enabled ? `${hhmm(startHour, startMin)} 부터 ${hhmm(endHour, endMin)} 까지 운영 종료` : '(사용 안 함)'}`));
     }
 
     function renderRoomBackupButtons() {
@@ -1635,7 +1480,7 @@
         });
     }
     function masterExportRoom(room) {
-        const bundle = { room, seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room] };
+        const bundle = { room, seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room], autoShutdownSchedule: autoShutdownSchedules[room] };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
         const a = document.createElement('a'); a.href = dataStr; a.download = `${room}_백업_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(a); a.click(); a.remove();
@@ -1651,6 +1496,7 @@
                 if (json.seatLayout) db.ref(`rooms/${room}/seatLayout`).set(json.seatLayout);
                 if (json.notice) db.ref(`rooms/${room}/notice`).set(json.notice);
                 if (json.systemStatus) db.ref(`rooms/${room}/systemStatus`).set(json.systemStatus);
+                if (json.autoShutdownSchedule) db.ref(`rooms/${room}/autoShutdownSchedule`).set(json.autoShutdownSchedule);
                 alert(`${room} 복원이 완료되었습니다.`);
             } catch { alert('올바르지 않은 백업 파일입니다.'); }
         };
@@ -1658,7 +1504,7 @@
     }
     function masterExportAll() {
         const bundle = { rooms: {}, shared: { blacklist: masterBlacklist, students: masterStudents } };
-        ROOM_LIST.forEach(room => { bundle.rooms[room] = { seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room] }; });
+        ROOM_LIST.forEach(room => { bundle.rooms[room] = { seatLayout: allRoomsData[room]?.seatLayout, notice: allRoomsData[room]?.notice, systemStatus: roomSystemStatus[room], autoShutdownSchedule: autoShutdownSchedules[room] }; });
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
         const a = document.createElement('a'); a.href = dataStr; a.download = `전체시스템백업_${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(a); a.click(); a.remove();
@@ -1675,6 +1521,7 @@
                     if (json.rooms[room].seatLayout) db.ref(`rooms/${room}/seatLayout`).set(json.rooms[room].seatLayout);
                     if (json.rooms[room].notice) db.ref(`rooms/${room}/notice`).set(json.rooms[room].notice);
                     if (json.rooms[room].systemStatus) db.ref(`rooms/${room}/systemStatus`).set(json.rooms[room].systemStatus);
+                    if (json.rooms[room].autoShutdownSchedule) db.ref(`rooms/${room}/autoShutdownSchedule`).set(json.rooms[room].autoShutdownSchedule);
                 });
                 if (json.shared) {
                     if (json.shared.blacklist) db.ref('shared/blacklist').set(json.shared.blacklist);
@@ -1797,7 +1644,7 @@
 
         const body = document.getElementById('mgPreviewBody');
         body.innerHTML = mgParsedRows.slice(0, 10).map(r => `
-            <tr><td>${r.time}</td><td>${r.teacher}</td><td>${r.id}</td><td>${r.name}</td><td>${r.purpose}</td><td>${r.status}</td></tr>
+            <tr><td>${esc(r.time)}</td><td>${esc(r.teacher)}</td><td>${esc(r.id)}</td><td>${esc(r.name)}</td><td>${esc(r.purpose)}</td><td>${esc(r.status)}</td></tr>
         `).join('') || `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">가져올 수 있는 데이터가 없습니다.</td></tr>`;
 
         const errBox = document.getElementById('mgErrorBox');
