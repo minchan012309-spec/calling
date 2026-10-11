@@ -2,7 +2,7 @@
   "name": "교무실 호출벨",
   "short_name": "호출벨",
   "start_url": "./index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "landscape",
   "background_color": "#f1f5f9",
   "theme_color": "#2563eb",
