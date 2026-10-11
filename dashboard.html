@@ -11,7 +11,7 @@
     <link rel="manifest" href="manifest-dashboard.webmanifest">
     <link rel="icon" href="assets/icon-192.png">
     <title>호출 대시보드 - 선생님용</title>
-    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="common.css?v=3">
     <style>
         html, body { height: 100%; }
         body { margin: 0; background: #f8fafc; padding: 20px 28px; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -274,7 +274,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="common.js"></script>
+<script src="common.js?v=3"></script>
 
 <script>
     const ROOM = resolveRoom();
@@ -547,7 +547,7 @@
         row.innerHTML = "";
         Object.entries(ALERT_PRESETS).forEach(([key, p]) => {
             const el = document.createElement('div');
-            el.className = 'preset-choice' + (key === roomSettings.soundPreset ? ' selected' : '');
+            el.className = 'preset-choice' + (key === (ALERT_PRESETS[roomSettings.soundPreset] ? roomSettings.soundPreset : 'default') ? ' selected' : '');
             el.innerHTML = `<div class="p-label">${esc(p.label)}</div><div class="p-desc">${esc(p.desc)}</div>`;
             el.onclick = () => {
                 row.querySelectorAll('.preset-choice').forEach(x => x.classList.remove('selected'));
