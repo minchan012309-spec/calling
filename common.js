@@ -129,7 +129,7 @@ function watchRoomSettings(room, onChange) {
 const repeatNotes = (notes, times, interval) =>
     Array.from({ length: times }, (_, k) => notes.map(([f, t, d, w, v]) => [f, t + k * interval, d, w, v])).flat();
 const ALERT_PRESETS = {
-    default: { label: '기본 벨', desc: '높낮이 번갈아 2번', notes: repeatNotes([[1568, 0, 0.2, 'square', 1], [1175, 0.2, 0.2, 'square', 1]], 2, 0.45) },
+    default: { label: '기본 벨', desc: '종소리 쨍쨍쨍 빠르게 3번', notes: repeatNotes([[1760, 0, 0.2, 'square', 1], [2637, 0, 0.14, 'square', 0.6]], 3, 0.26) },
     ring:    { label: '전화벨', desc: '따르릉 따르릉', notes: repeatNotes(Array.from({ length: 7 }, (_, i) => [i % 2 ? 1300 : 1700, i * 0.07, 0.07, 'square', 1]), 2, 0.52) },
     chime:   { label: '띵동 차임', desc: '크게 울리는 띵동', notes: [[1976, 0, 0.4, 'square', 0.9], [1568, 0.3, 0.6, 'square', 0.9]] },
     melody:  { label: '멜로디', desc: '도 · 미 · 솔 · 높은 도', notes: [[1047, 0, 0.18, 'sawtooth', 1], [1319, 0.18, 0.18, 'sawtooth', 1], [1568, 0.36, 0.18, 'sawtooth', 1], [2093, 0.54, 0.45, 'sawtooth', 1]] },
