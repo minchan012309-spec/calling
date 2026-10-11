@@ -37,30 +37,30 @@
         #empty .empty-icon { width: 96px; height: 96px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 2.6rem; margin-bottom: 6px; }
         #empty small { font-size: 0.95rem; font-weight: 500; color: #cbd5e1; }
 
-        /* 호출 카드: 왼쪽 파란 패널(누구를 호출했나) + 오른쪽 학생 정보 */
-        .alert-card { background: white; border-radius: 28px; padding: 14px; box-shadow: 0 18px 50px rgba(15,23,42,0.10); display: none; flex-direction: column; flex: 1; min-height: 0; gap: 12px; }
+        /* 호출 카드: 파란 히어로 박스 하나에 선생님 + 학생 정보를 담는다 */
+        .alert-card { display: none; flex-direction: column; flex: 1; min-height: 0; gap: 12px; }
         .alert-card.pop-in { animation: cardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes cardPop { 0% { transform: scale(0.94); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .call-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .call-teacher { background: linear-gradient(145deg, #2563eb 0%, #1e40af 100%); color: white; border-radius: 22px; padding: 26px 30px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; min-width: 0; }
-        .call-teacher::after { content: ''; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,0.08); }
-        .live-pill { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; margin-bottom: 18px; }
+        @keyframes cardPop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .call-hero { flex: 1; min-height: 0; background: linear-gradient(150deg, #2563eb 0%, #1e40af 100%); border-radius: 30px; padding: 22px 26px 26px; color: white; display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 18px 44px rgba(37,99,235,0.28); }
+        .call-hero::before { content: ''; position: absolute; right: -90px; top: -90px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.07); }
+        .call-hero::after { content: ''; position: absolute; left: -70px; bottom: 120px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+        .hero-top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+        .live-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 7px 16px; border-radius: 20px; font-weight: 700; font-size: 1rem; }
         .live-dot { width: 9px; height: 9px; border-radius: 50%; background: #fca5a5; animation: pulse 1.2s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .t-label { font-size: 1.1rem; font-weight: 600; opacity: 0.8; }
-        .t-name { font-size: clamp(2.6rem, 9vh, 4.6rem); font-weight: 900; line-height: 1.1; margin: 6px 0 0; word-break: keep-all; }
-        .t-name small { font-size: 0.45em; font-weight: 700; opacity: 0.85; margin-left: 6px; }
-        .queue-badge { display: none; align-self: flex-start; margin-top: 18px; background: #fbbf24; color: #78350f; font-weight: 800; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; position: relative; z-index: 1; }
-        .timer-box { margin-top: auto; padding-top: 22px; position: relative; z-index: 1; }
-        .timer-track { height: 6px; background: rgba(255,255,255,0.25); border-radius: 6px; overflow: hidden; }
-        #timerFill { height: 100%; width: 100%; background: white; border-radius: 6px; }
-        #timerText { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; font-weight: 600; }
-
-        .call-student { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 22px; padding: 26px 30px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-        .s-label { font-size: 1rem; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-        .s-name { font-size: clamp(2.6rem, 9vh, 4.4rem); font-weight: 900; color: #0f172a; line-height: 1.1; word-break: keep-all; }
-        .s-id { font-size: clamp(1.1rem, 3vh, 1.6rem); font-weight: 700; color: #475569; margin-top: 8px; }
-        .s-purpose { align-self: flex-start; margin-top: 24px; background: #dbeafe; color: #1d4ed8; font-size: clamp(1.4rem, 4vh, 2.2rem); font-weight: 800; padding: 10px 26px; border-radius: 40px; max-width: 100%; word-break: keep-all; }
+        #timerText { background: rgba(0,0,0,0.18); padding: 7px 16px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; }
+        .hero-mid { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+        .t-label { font-size: 1.15rem; font-weight: 600; opacity: 0.8; }
+        .t-name { font-size: clamp(3rem, 13vh, 6.2rem); font-weight: 900; line-height: 1.05; margin: 6px 0 0; word-break: keep-all; }
+        .t-name small { font-size: 0.4em; font-weight: 700; opacity: 0.85; margin-left: 10px; }
+        .queue-badge { display: none; align-self: flex-start; margin-top: 14px; background: #fbbf24; color: #78350f; font-weight: 800; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem; }
+        .hero-student { position: relative; z-index: 1; background: white; color: #0f172a; border-radius: 22px; padding: 18px 26px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+        .s-label { font-size: 0.9rem; font-weight: 700; color: #64748b; }
+        .s-name { font-size: clamp(2.2rem, 7.5vh, 3.6rem); font-weight: 900; line-height: 1.1; word-break: keep-all; }
+        .s-id { font-size: clamp(1rem, 2.6vh, 1.4rem); font-weight: 700; color: #475569; margin-top: 4px; }
+        .s-purpose { background: #dbeafe; color: #1d4ed8; font-size: clamp(1.4rem, 4vh, 2.2rem); font-weight: 800; padding: 12px 28px; border-radius: 40px; text-align: center; word-break: keep-all; max-width: 55%; }
+        .timer-track { position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: rgba(255,255,255,0.18); z-index: 1; }
+        #timerFill { height: 100%; width: 100%; background: rgba(255,255,255,0.9); }
 
         .card-footer { display: flex; gap: 12px; }
         .act-btn { border: none; border-radius: 20px; height: clamp(64px, 11vh, 92px); font-size: clamp(1.4rem, 3.6vh, 2rem); font-weight: 800; cursor: pointer; color: white; }
@@ -104,14 +104,14 @@
         .hint { font-size: 0.8rem; color: #94a3b8; margin: 8px 0 0; line-height: 1.45; }
         .room-choice-btn { padding: 12px 20px; font-size: 1rem; max-width: none; margin-bottom: 8px; }
 
-        @media (max-width: 900px), (orientation: portrait) {
-            .call-main { grid-template-columns: 1fr; }
+        @media (orientation: portrait) {
+            .hero-student { flex-direction: column; align-items: flex-start; }
+            .s-purpose { max-width: 100%; }
         }
         @media (max-width: 900px) {
             body { padding: 10px; }
             .settings-cols { grid-template-columns: 1fr; }
             .stats-bar { grid-template-columns: 1fr; }
-            .call-main { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -151,23 +151,25 @@
 <div id="empty"><div class="empty-icon">🔔</div>대기 중<small>학생이 호출하면 이 화면에 바로 표시됩니다</small></div>
 
 <div class="alert-card" id="card">
-    <div class="call-main">
-        <div class="call-teacher">
+    <div class="call-hero">
+        <div class="hero-top">
             <div class="live-pill"><span class="live-dot"></span>지금 호출했어요</div>
+            <div id="timerText"></div>
+        </div>
+        <div class="hero-mid">
             <div class="t-label">호출받은 선생님</div>
             <div class="t-name" id="tName">---</div>
             <div class="queue-badge" id="queueBadge"></div>
-            <div class="timer-box">
-                <div class="timer-track"><div id="timerFill"></div></div>
-                <div id="timerText"></div>
-            </div>
         </div>
-        <div class="call-student">
-            <div class="s-label">호출한 학생</div>
-            <div class="s-name" id="sName"></div>
-            <div class="s-id" id="sId"></div>
+        <div class="hero-student">
+            <div>
+                <div class="s-label">호출한 학생</div>
+                <div class="s-name" id="sName"></div>
+                <div class="s-id" id="sId"></div>
+            </div>
             <div class="s-purpose" id="sPurp"></div>
         </div>
+        <div class="timer-track"><div id="timerFill"></div></div>
     </div>
     <div class="card-footer">
         <button class="replay-btn" id="replayBtn">🔊 음성 다시 듣기</button>
@@ -421,7 +423,7 @@
         fill.style.width = '0%';
         const endAt = Date.now() + AUTO_CLOSE_MS;
         const label = document.getElementById('timerText');
-        const tick = () => { label.innerText = `${Math.max(0, Math.ceil((endAt - Date.now()) / 1000))}초 뒤 자동으로 닫혀요`; };
+        const tick = () => { label.innerText = `⏱ ${Math.max(0, Math.ceil((endAt - Date.now()) / 1000))}초 뒤 자동으로 닫혀요`; };
         tick();
         countdownTimer = setInterval(tick, 1000);
         autoCloseTimer = setTimeout(() => finishCurrentCall('출력 완료'), AUTO_CLOSE_MS);
