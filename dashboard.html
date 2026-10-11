@@ -48,11 +48,10 @@
         .timer-track { height: 8px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
         #timerFill { height: 100%; width: 100%; background: #2563eb; border-radius: 6px; }
         #timerText { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 4px; text-align: center; }
-        .card-actions { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+        .card-actions { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .act-btn { border: none; border-radius: 20px; padding: 0; height: clamp(64px, 11vh, 96px); font-size: clamp(1.4rem, 3.6vh, 2rem); font-weight: 800; cursor: pointer; color: white; }
         .act-btn:active { transform: scale(0.98); }
-        .act-btn.confirm { background: #16a34a; }
-        .act-btn.absent { background: #dc2626; }
+                .act-btn.absent { background: #dc2626; }
         .replay-btn { margin-top: 10px; background: #f1f5f9; border: none; border-radius: 14px; padding: 12px; font-weight: 700; color: #475569; font-size: 1rem; cursor: pointer; }
 
         #historyList { display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; flex-wrap: wrap; }
@@ -95,7 +94,6 @@
             body { padding: 10px; }
             .settings-cols { grid-template-columns: 1fr; }
             .stats-bar { grid-template-columns: 1fr; }
-            .card-actions { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -146,7 +144,6 @@
         <div id="timerText"></div>
     </div>
     <div class="card-actions">
-        <button class="act-btn confirm" id="confirmBtn">✓ 확인했어요</button>
         <button class="act-btn absent" id="absentBtn">부재중 전송</button>
     </div>
     <button class="replay-btn" id="replayBtn">🔊 음성 다시 듣기</button>
@@ -389,7 +386,7 @@
         fill.style.width = '0%';
         const endAt = Date.now() + AUTO_CLOSE_MS;
         const label = document.getElementById('timerText');
-        const tick = () => { label.innerText = `${Math.max(0, Math.ceil((endAt - Date.now()) / 1000))}초 뒤 자동으로 확인 처리됩니다`; };
+        const tick = () => { label.innerText = `${Math.max(0, Math.ceil((endAt - Date.now()) / 1000))}초 뒤 이 호출은 자동으로 닫힙니다`; };
         tick();
         countdownTimer = setInterval(tick, 1000);
         autoCloseTimer = setTimeout(() => finishCurrentCall('출력 완료'), AUTO_CLOSE_MS);
@@ -422,9 +419,6 @@
         return d;
     }
 
-    document.getElementById('confirmBtn').addEventListener('click', () => {
-        if (finishCurrentCall('출력 완료')) showToast('확인 처리했습니다', true);
-    });
     document.getElementById('absentBtn').addEventListener('click', () => {
         if (!currentCall) return;
         const d = currentCall;
