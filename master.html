@@ -242,6 +242,7 @@
             <button class="pad-btn" onclick="pinAuth.press('0')">0</button>
             <button class="pad-btn" style="background:#e2e8f0; font-size:0.9rem;" onclick="location.reload()">취소</button>
         </div>
+        <button id="bioLoginBtn" class="btn" style="display:none; width:100%; margin-top:14px; padding:14px;" onclick="bioLogin()">🔐 Face ID / 지문으로 열기</button>
     </div>
 </div>
 
@@ -526,8 +527,20 @@
                     <button class="btn danger" onclick="masterChangePassword()">비밀번호 변경</button>
                     <div style="margin-top:12px; font-size:0.85rem; color:#64748b;">모든 교무실이 공통으로 사용하는 관리자 비밀번호입니다. 변경 즉시 다른 교무실 기기에도 적용됩니다.</div>
                 </div>
+                <div class="card" style="max-width:500px;" id="bioCard">
+                    <h3>🔐 Face ID / 지문으로 열기</h3>
+                    <div id="bioStatus" style="font-size:0.9rem; color:var(--sub); margin-bottom:12px; line-height:1.5;"></div>
+                    <div id="bioEnableBox">
+                        <span class="input-label">현재 비밀번호 (6자리)</span>
+                        <input type="password" inputmode="numeric" id="bioPinInput" class="form-input" placeholder="비밀번호 6자리" maxlength="6">
+                        <button class="btn" onclick="bioEnable()">이 기기에서 켜기</button>
+                    </div>
+                    <button class="btn gray" id="bioDisableBtn" style="display:none;" onclick="bioDisable()">이 기기에서 끄기</button>
+                    <div style="margin-top:12px; font-size:0.8rem; color:#94a3b8; line-height:1.5;">비밀번호는 이 기기 안에서 생체인증 키로 암호화되어 저장되고, 서버로 보내지지 않습니다. 모든 교무실이 같이 쓰는 비밀번호이므로 본인 기기에서만 켜 주세요.</div>
+                </div>
             </div>
 
+            <!-- 생체인증 -->
             <!-- 통합 검색 결과 -->
             <div class="view-page" id="view-search">
                 <div class="card">
@@ -581,6 +594,93 @@
     });
     db.ref('shared/adminSetupDone').once('value').then(() => setTimeout(() => pinAuth.open(), 0));
 
+    // ===================== 생체인증(Face ID / 지문) 로그인 =====================
+    // 패스키(WebAuthn)의 PRF 기능으로 이 기기에서만 풀 수 있는 키를 만들어, 관리자 비밀번호를 암호화해 localStorage에 둔다.
+    const BIO_KEY = 'master_bio_v1';
+    const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const b64d = str => Uint8Array.from(atob(str.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const bioSaved = () => { try { return JSON.parse(localStorage.getItem(BIO_KEY) || 'null'); } catch (e) { return null; } };
+
+    async function bioSupported() {
+        try {
+            return !!(window.PublicKeyCredential && window.isSecureContext &&
+                await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+        } catch (e) { return false; }
+    }
+    // 생체인증을 거쳐 PRF 비밀값(32바이트)을 얻는다
+    async function bioGetSecret(credId, salt) {
+        const assertion = await navigator.credentials.get({ publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            allowCredentials: [{ type: 'public-key', id: b64d(credId) }],
+            userVerification: 'required',
+            extensions: { prf: { eval: { first: b64d(salt) } } }
+        } });
+        const out = assertion.getClientExtensionResults().prf?.results?.first;
+        if (!out) throw new Error('PRF_UNSUPPORTED');
+        return crypto.subtle.importKey('raw', out, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    }
+    async function bioEnable() {
+        const pin = document.getElementById('bioPinInput').value;
+        if (pin.length !== 6 || isNaN(pin)) { alert('비밀번호 6자리를 입력하세요.'); return; }
+        if (!await bioSupported()) { alert('이 기기/브라우저는 생체인증을 지원하지 않거나, https 주소가 아닙니다.'); return; }
+        try {
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pin);   // 비밀번호가 맞는지 먼저 확인
+        } catch (e) { alert('비밀번호가 올바르지 않습니다.'); return; }
+        try {
+            const cred = await navigator.credentials.create({ publicKey: {
+                challenge: crypto.getRandomValues(new Uint8Array(32)),
+                rp: { name: '교무실 호출벨 마스터' },
+                user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'master', displayName: '마스터 관리자' },
+                pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+                extensions: { prf: {} }
+            } });
+            if (!cred.getClientExtensionResults().prf?.enabled) { alert('이 기기는 생체인증 키 기능(PRF)을 지원하지 않아요. 계속 비밀번호로 열어 주세요.'); return; }
+            const credId = b64e(cred.rawId);
+            const salt = b64e(crypto.getRandomValues(new Uint8Array(32)));
+            const key = await bioGetSecret(credId, salt);                // 한 번 더 생체인증
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(pin));
+            localStorage.setItem(BIO_KEY, JSON.stringify({ credId, salt, iv: b64e(iv), ct: b64e(ct) }));
+            document.getElementById('bioPinInput').value = '';
+            alert('이제 이 기기에서는 Face ID / 지문으로 열 수 있어요.');
+        } catch (e) {
+            if (e.name !== 'NotAllowedError') alert('생체인증 설정에 실패했습니다: ' + (e.message === 'PRF_UNSUPPORTED' ? '이 기기는 PRF를 지원하지 않아요.' : e.message));
+        }
+        renderBioCard();
+    }
+    function bioDisable() {
+        if (!confirm('이 기기의 생체인증 로그인을 끌까요?')) return;
+        localStorage.removeItem(BIO_KEY);
+        renderBioCard();
+    }
+    async function bioLogin() {
+        const saved = bioSaved();
+        if (!saved) return;
+        try {
+            const key = await bioGetSecret(saved.credId, saved.salt);
+            const pinBytes = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(saved.iv) }, key, b64d(saved.ct));
+            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, new TextDecoder().decode(pinBytes));
+            enterApp();
+        } catch (e) {
+            if (e.name === 'NotAllowedError') return;                    // 사용자가 취소
+            if (e.code && e.code.startsWith('auth/')) {                  // 비밀번호가 바뀐 경우 등
+                localStorage.removeItem(BIO_KEY);
+                alert('저장된 비밀번호로 로그인할 수 없어요. 비밀번호가 바뀐 것 같아요. 비밀번호로 로그인한 뒤 생체인증을 다시 켜 주세요.');
+                document.getElementById('bioLoginBtn').style.display = 'none';
+            } else alert('생체인증에 실패했습니다. 비밀번호로 열어 주세요.');
+        }
+    }
+    async function renderBioCard() {
+        const saved = bioSaved(), ok = await bioSupported();
+        document.getElementById('bioStatus').innerText = !ok
+            ? '이 기기/브라우저에서는 생체인증을 쓸 수 없어요. (https 주소와 Face ID·지문이 설정된 기기가 필요해요)'
+            : saved ? '✅ 이 기기에서 켜져 있어요. 로그인 화면의 "Face ID / 지문으로 열기" 버튼을 누르세요.' : '꺼져 있어요. 켜면 비밀번호 입력 없이 Face ID / 지문으로 열 수 있어요.';
+        document.getElementById('bioEnableBox').style.display = (ok && !saved) ? 'block' : 'none';
+        document.getElementById('bioDisableBtn').style.display = saved ? 'inline-block' : 'none';
+    }
+    bioSupported().then(ok => { if (ok && bioSaved()) document.getElementById('bioLoginBtn').style.display = 'block'; });
+
     // 키보드 숫자 입력
     document.addEventListener('keydown', e => {
         if (document.getElementById('loginGate').style.display === 'none') return;
@@ -632,6 +732,7 @@
         if (key === 'backup') renderRoomBackupButtons();
         if (key === 'migrate') mgPopulateRoomSelect();
         if (key === 'ops') renderOpsStatus();
+        if (key === 'security') renderBioCard();
     }
 
     // ===================== 페이지 나누기 (호출 로그 / 학생 DB 공통) =====================
@@ -1732,23 +1833,13 @@
     }
 
     async function masterChangePassword() {
-        const cur = document.getElementById('secCurrentPw').value;
-        const nPw = document.getElementById('secNewPw').value;
-        const cPw = document.getElementById('secConfirmPw').value;
-        if (cur.length !== 6 || isNaN(cur)) { alert('현재 비밀번호 6자리를 정확히 입력하세요.'); return; }
-        if (nPw.length !== 6 || isNaN(nPw)) { alert('새 비밀번호는 숫자 6자리여야 합니다.'); return; }
-        if (nPw !== cPw) { alert('새 비밀번호 확인이 일치하지 않습니다.'); return; }
-        try {
-            await auth.signInWithEmailAndPassword(ADMIN_EMAIL, cur);
-            await auth.currentUser.updatePassword(nPw);
-            alert('비밀번호가 변경되었습니다. (모든 교무실 공통 적용)');
-            document.getElementById('secCurrentPw').value = '';
-            document.getElementById('secNewPw').value = '';
-            document.getElementById('secConfirmPw').value = '';
-        } catch (err) {
-            if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') alert('현재 비밀번호가 일치하지 않습니다.');
-            else alert('오류가 발생했습니다: ' + err.message);
-        }
+        const ok = await changeAdminPassword(
+            document.getElementById('secCurrentPw').value,
+            document.getElementById('secNewPw').value,
+            document.getElementById('secConfirmPw').value);
+        if (!ok) return;
+        ['secCurrentPw', 'secNewPw', 'secConfirmPw'].forEach(id => document.getElementById(id).value = '');
+        if (bioSaved()) { localStorage.removeItem(BIO_KEY); alert('비밀번호가 바뀌어 생체인증 설정이 해제되었어요. 필요하면 다시 켜 주세요.'); renderBioCard(); }
     }
 </script>
 </body>
