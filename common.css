@@ -1,0 +1,46 @@
+/* Pretendard */
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Thin.woff2') format('woff2'); font-weight: 100; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraLight.woff2') format('woff2'); font-weight: 200; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Light.woff2') format('woff2'); font-weight: 300; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Medium.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/pretendard@1.0/Pretendard-Black.woff2') format('woff2'); font-weight: 900; font-display: swap; }
+
+html, body, button, input, select, textarea {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+
+/* 태블릿(키오스크) 화면 공통: 확대/더블탭 줌 방지, 탭 하이라이트 제거 */
+body.kiosk {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+}
+body.kiosk input, body.kiosk textarea { -webkit-user-select: text; user-select: text; }
+
+/* 교무실 선택 게이트 (index / dashboard 공통) */
+#roomGate { position: fixed; inset: 0; background: #f1f5f9; z-index: 3000000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+#roomGate h1 { font-size: 1.6rem; margin: 0 0 8px; color: #1e293b; }
+#roomGate p { color: #64748b; margin: 0 0 22px; }
+.room-choice-btn { background: white; border: 2px solid #e2e8f0; padding: 18px 32px; border-radius: 16px; font-size: 1.15rem; font-weight: 700; color: #1e293b; cursor: pointer; width: 100%; max-width: 360px; margin-bottom: 10px; }
+.room-choice-btn:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+/* 운영 종료/점검 전체 화면 (index / dashboard 공통) */
+#systemBlockOverlay { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%); z-index: 2500000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; color: white; }
+#systemBlockOverlay .block-icon { font-size: 4.5rem; margin-bottom: 18px; }
+#systemBlockOverlay h1 { font-size: 2.1rem; margin: 0 0 12px; color: white; font-weight: 900; }
+#systemBlockOverlay p { color: #e2e8f0; font-size: 1.1rem; line-height: 1.7; max-width: 600px; margin: 0; font-weight: 500; white-space: pre-wrap; }
+
+/* 관리자 PIN 패드 (index / dashboard 공통) */
+.pin-display { font-size: 2rem; font-weight: 700; letter-spacing: 8px; margin: 10px 0; color: #1e293b; height: 40px; }
+.pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.pad-btn { background: #f1f5f9; border: none; padding: 16px 4px; border-radius: 14px; font-size: 1.35rem; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.pad-btn:active { background: #cbd5e1; }
+.pad-btn.danger { background: #fee2e2; color: #ef4444; }
+.pad-btn.muted { background: #e2e8f0; font-size: 1rem; }
