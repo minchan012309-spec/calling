@@ -316,3 +316,6 @@ function summarizeCalls(calls) {
     };
     return { todayCalls, topTeacher: count('teacher'), topPurpose: count('purpose') };
 }
+
+// 서비스 워커 등록 (홈 화면에 앱으로 설치할 수 있게 함. https 또는 localhost에서만 동작)
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
