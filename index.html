@@ -66,11 +66,17 @@
         .info-panel .field-label { font-size: 0.85rem; font-weight: 800; color: #334155; margin-bottom: 8px; }
         .info-panel .grid { flex: 1; align-content: start; grid-auto-rows: minmax(30px, 54px); }
         .info-panel .btn-opt { display: flex; align-items: center; justify-content: center; padding: 6px 2px; }
-        /* 번호: 스크롤바로 넘기며 고르는 목록 */
-        #numGrid { overflow-y: scroll; grid-auto-rows: 52px; align-content: start; min-height: 0; padding-right: 6px; -webkit-overflow-scrolling: touch; }
-        #numGrid::-webkit-scrollbar { width: 16px; }
-        #numGrid::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
-        #numGrid::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; border: 3px solid #e2e8f0; }
+        /* 번호: 생년월일 고르듯 돌려서 선택하는 휠 */
+        .wheel { position: relative; flex: 1; min-height: 120px; border-radius: 12px; background: white; border: 2px solid #e2e8f0; overflow: hidden; }
+        .wheel-list { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+        .wheel-list::-webkit-scrollbar { display: none; }
+        .wheel-item { height: 46px; display: flex; align-items: center; justify-content: center; scroll-snap-align: center; font-size: 1.35rem; font-weight: 700; color: #475569; cursor: pointer; transition: color 0.1s; }
+        .wheel-band { position: absolute; left: 8px; right: 8px; top: 50%; height: 46px; transform: translateY(-50%); border-radius: 12px; border: 2px solid #cbd5e1; background: rgba(148,163,184,0.12); pointer-events: none; }
+        .wheel.has-value .wheel-band { border-color: #2563eb; background: rgba(37,99,235,0.1); }
+        .wheel.has-value .wheel-item.current { color: #2563eb; }
+        .wheel::before, .wheel::after { content: ''; position: absolute; left: 0; right: 0; height: 34%; z-index: 2; pointer-events: none; }
+        .wheel::before { top: 0; background: linear-gradient(to bottom, white 5%, rgba(255,255,255,0)); }
+        .wheel::after { bottom: 0; background: linear-gradient(to top, white 5%, rgba(255,255,255,0)); }
         .info-panel input[type="text"], .info-panel textarea { margin: 0; flex: 1; min-height: 48px; }
         .info-panel textarea { display: block; height: auto; }
         .info-panel textarea:disabled { background: #f1f5f9; color: #94a3b8; }
@@ -223,7 +229,7 @@
             <div class="info-panel"><div class="field-label">호출 목적</div><div class="grid" id="purposeGrid" style="grid-template-columns: repeat(4, 1fr);"></div></div>
             <div class="info-panel"><div class="field-label">반</div><div class="grid" id="classGrid" style="grid-template-columns: repeat(5, 1fr);"></div></div>
             <div class="info-panel"><div class="field-label">이름</div><input type="text" id="nameInp" placeholder="이름 입력" oninput="nameAutoFilled = false; val2()"></div>
-            <div class="info-panel"><div class="field-label">번호</div><div class="grid" id="numGrid" style="grid-template-columns: repeat(5, 1fr);"></div></div>
+            <div class="info-panel"><div class="field-label">번호</div><div class="wheel" id="numWheel"><div class="wheel-band"></div><div class="wheel-list" id="numList"></div></div></div>
             <div class="info-panel"><div class="field-label">기타 사유 <span style="font-weight:500; color:#94a3b8;">(목적이 '기타'일 때, 최대 30자)</span></div><textarea id="customPurpose" placeholder="기타 사유를 입력하세요" maxlength="30" disabled oninput="val2()"></textarea></div>
         </div>
         <div class="page-actions">
@@ -1014,8 +1020,62 @@
     function buildInputGrids() {
         buildOptionGrid('gradeGrid', [1, 2, 3].map(g => ({ value: String(g), label: `${g}학년` })), 'g', data.g);
         buildOptionGrid('classGrid', Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}반` })), 'b', data.b);
-        buildOptionGrid('numGrid', Array.from({ length: 35 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}번` })), 'n', data.n);
+        buildNumberWheel();
         buildOptionGrid('purposeGrid', PURPOSES.map(p => ({ value: p, label: p })), 'p', data.p);
+    }
+
+    // 번호 휠: 스크롤이 멈추면 가운데 줄에 걸린 번호가 선택된다
+    const WHEEL_MAX = 40, WHEEL_ITEM_H = 46;
+    let wheelScrollTimer = null, wheelProgrammatic = false, wheelObserver = null;
+    function buildNumberWheel() {
+        const wheel = document.getElementById('numWheel');
+        const list = document.getElementById('numList');
+        wheel.classList.remove('has-value');
+        list.innerHTML = '';
+        const pad = () => (list.clientHeight - WHEEL_ITEM_H) / 2;
+        const spacer = () => { const d = document.createElement('div'); d.className = 'wheel-spacer'; d.style.height = pad() + 'px'; d.style.flexShrink = '0'; return d; };
+        list.appendChild(spacer());
+        for (let n = 1; n <= WHEEL_MAX; n++) {
+            const it = document.createElement('div');
+            it.className = 'wheel-item';
+            it.dataset.n = n;
+            it.innerText = `${n}번`;
+            it.onclick = () => {
+                const top = (n - 1) * WHEEL_ITEM_H;
+                // 이미 가운데 있는 번호를 누르면 스크롤이 일어나지 않으므로 바로 선택한다
+                if (Math.abs(list.scrollTop - top) < 2) { wheel.classList.add('has-value'); selectOption('n', String(n)); }
+                else list.scrollTo({ top, behavior: 'smooth' });
+            };
+            list.appendChild(it);
+        }
+        list.appendChild(spacer());
+        const resize = () => list.querySelectorAll('.wheel-spacer').forEach(sp => sp.style.height = pad() + 'px');
+        requestAnimationFrame(() => { resize(); wheelProgrammatic = true; list.scrollTop = 0; paintWheel(); setTimeout(() => { wheelProgrammatic = false; }, 150); });
+        list.onscroll = () => {
+            paintWheel();
+            if (wheelProgrammatic) return;
+            clearTimeout(wheelScrollTimer);
+            wheelScrollTimer = setTimeout(() => {
+                const n = Math.min(WHEEL_MAX, Math.max(1, Math.round(list.scrollTop / WHEEL_ITEM_H) + 1));
+                wheel.classList.add('has-value');
+                selectOption('n', String(n));
+            }, 120);
+        };
+        // 화면이 처음 보일 때/크기가 바뀔 때 가운데 정렬 여백을 다시 계산
+        if (wheelObserver) wheelObserver.disconnect();
+        wheelObserver = new ResizeObserver(resize);
+        wheelObserver.observe(list);
+    }
+    // 가운데에서 멀수록 작고 흐리게 (휠 느낌)
+    function paintWheel() {
+        const list = document.getElementById('numList');
+        const center = list.scrollTop / WHEEL_ITEM_H;
+        list.querySelectorAll('.wheel-item').forEach(it => {
+            const d = Math.abs(Number(it.dataset.n) - 1 - center);
+            it.style.opacity = Math.max(0.25, 1 - d * 0.28);
+            it.style.transform = `scale(${Math.max(0.7, 1 - d * 0.1)})`;
+            it.classList.toggle('current', d < 0.5);
+        });
     }
 
     function buildStudentId() {
