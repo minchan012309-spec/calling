@@ -224,6 +224,19 @@ function speak(text, s, onend) {
         if (synth.paused) synth.resume();
     }, 80);
 }
+// 한국어 조사 (으로/로): 받침이 없거나 ㄹ 받침이면 '로'
+function euroParticle(word) {
+    if (!word) return '으로';
+    const code = word[word.length - 1].charCodeAt(0) - 0xAC00;
+    if (code < 0 || code > 11171) return '으로';
+    const jong = code % 28;
+    return (jong === 0 || jong === 8) ? '로' : '으로';
+}
+// 호출 안내 문구 (학생 화면·대시보드 공통): "안성실 선생님, 김민찬 학생이 제출로 호출했습니다."
+function callSpeech(call) {
+    const purpose = String(call.purpose || '').replace(/^기타\((.*)\)$/, '$1');   // "기타(상담 요청)" → "상담 요청"
+    return `${call.teacher} 선생님, ${call.name} 학생이 ${purpose}${euroParticle(purpose)} 호출했습니다.`;
+}
 function stopSpeaking() {
     clearTimeout(speakTimer);
     activeUtterance = null;
