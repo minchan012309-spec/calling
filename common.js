@@ -119,24 +119,24 @@ function showBlockOverlay(st) {
 }
 
 // ===================== 소리 설정 (rooms/{room}/settings) =====================
-const DEFAULT_SETTINGS = { alertVolume: 100, ttsVolume: 100, ttsRate: 0.9, ttsPitch: 1, soundPreset: 'default', ttsVoice: '' };
+const DEFAULT_SETTINGS = { alertVolume: 100, ttsVolume: 100, ttsRate: 0.9, ttsPitch: 1, soundPreset: 'default', ttsVoice: '', ttsStyle: 'standard' };
 function watchRoomSettings(room, onChange) {
     db.ref(`rooms/${room}/settings`).on('value', snap => onChange(Object.assign({}, DEFAULT_SETTINGS, snap.val() || {})));
 }
 
 // 알림음: [주파수, 시작(초), 길이(초), 파형, 세기]
-// 쉬는 시간처럼 시끄러운 곳에서도 들리도록 귀에 잘 띄는 1~3kHz 대역의 사각/톱니파를 쓰고, 2초 안팎으로 반복한다.
+// 쉬는 시간처럼 시끄러운 곳에서도 들리도록 귀에 잘 띄는 1~3kHz 대역의 사각/톱니파를 쓰고, 1초 안팎으로 짧고 크게 울린다.
 const repeatNotes = (notes, times, interval) =>
     Array.from({ length: times }, (_, k) => notes.map(([f, t, d, w, v]) => [f, t + k * interval, d, w, v])).flat();
 const ALERT_PRESETS = {
-    default: { label: '기본 벨', desc: '높낮이 번갈아 3번', notes: repeatNotes([[1568, 0, 0.28, 'square', 1], [1175, 0.3, 0.28, 'square', 1]], 3, 0.7) },
-    ring:    { label: '전화벨', desc: '따르릉 따르릉', notes: repeatNotes(Array.from({ length: 8 }, (_, i) => [i % 2 ? 1300 : 1700, i * 0.07, 0.07, 'square', 1]), 3, 0.75) },
-    chime:   { label: '띵동 차임', desc: '크게 울리는 띵동', notes: repeatNotes([[1976, 0, 0.5, 'square', 0.9], [1568, 0.45, 0.7, 'square', 0.9]], 2, 1.25) },
-    melody:  { label: '멜로디', desc: '도 · 미 · 솔 · 높은 도', notes: repeatNotes([[1047, 0, 0.22, 'sawtooth', 1], [1319, 0.22, 0.22, 'sawtooth', 1], [1568, 0.44, 0.22, 'sawtooth', 1], [2093, 0.66, 0.4, 'sawtooth', 1]], 2, 1.2) },
-    bell:    { label: '종소리', desc: '쨍한 금속 종', notes: repeatNotes([[1760, 0, 0.55, 'square', 1], [2637, 0, 0.4, 'square', 0.6]], 3, 0.7) },
-    digital: { label: '디지털 삑삑', desc: '또렷한 6연속음', notes: repeatNotes([[2200, 0, 0.1, 'square', 1]], 6, 0.18) },
-    short:   { label: '짧은 알림', desc: '삑 삑 삑', notes: repeatNotes([[2000, 0, 0.18, 'square', 1]], 3, 0.3) },
-    urgent:  { label: '긴급 경보', desc: '사이렌처럼 빠른 반복', notes: repeatNotes([[1200, 0, 0.12, 'square', 1], [2400, 0.12, 0.12, 'square', 1]], 8, 0.24) }
+    default: { label: '기본 벨', desc: '높낮이 번갈아 2번', notes: repeatNotes([[1568, 0, 0.2, 'square', 1], [1175, 0.2, 0.2, 'square', 1]], 2, 0.45) },
+    ring:    { label: '전화벨', desc: '따르릉 따르릉', notes: repeatNotes(Array.from({ length: 7 }, (_, i) => [i % 2 ? 1300 : 1700, i * 0.07, 0.07, 'square', 1]), 2, 0.52) },
+    chime:   { label: '띵동 차임', desc: '크게 울리는 띵동', notes: [[1976, 0, 0.4, 'square', 0.9], [1568, 0.3, 0.6, 'square', 0.9]] },
+    melody:  { label: '멜로디', desc: '도 · 미 · 솔 · 높은 도', notes: [[1047, 0, 0.18, 'sawtooth', 1], [1319, 0.18, 0.18, 'sawtooth', 1], [1568, 0.36, 0.18, 'sawtooth', 1], [2093, 0.54, 0.45, 'sawtooth', 1]] },
+    bell:    { label: '종소리', desc: '쨍한 금속 종', notes: [[1760, 0, 0.9, 'square', 1], [2637, 0, 0.5, 'square', 0.6]] },
+    digital: { label: '디지털 삑삑', desc: '또렷한 5연속음', notes: repeatNotes([[2200, 0, 0.1, 'square', 1]], 5, 0.18) },
+    short:   { label: '짧은 알림', desc: '삑 삑 삑', notes: repeatNotes([[2000, 0, 0.16, 'square', 1]], 3, 0.28) },
+    urgent:  { label: '긴급 경보', desc: '사이렌처럼 빠른 반복', notes: repeatNotes([[1200, 0, 0.1, 'square', 1], [2400, 0.1, 0.1, 'square', 1]], 5, 0.2) }
 };
 // 알림음이 음성(TTS)에 묻히지 않도록 최대 크기로 낸다. (음성은 브라우저 최대 100%가 한계)
 const ALERT_GAIN = 1.0;
@@ -178,28 +178,56 @@ function playAlertTone(presetKey, volumePercent) {
 
 // ===================== 음성 안내 (TTS) =====================
 const ttsSupported = 'speechSynthesis' in window;
-function getKoVoices() {
-    return ttsSupported ? window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('ko')) : [];
-}
+function getAllVoices() { return ttsSupported ? window.speechSynthesis.getVoices() : []; }
+function getKoVoices() { return getAllVoices().filter(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith('ko')); }
 function pickVoice(name) {
-    const ko = getKoVoices();
-    return ko.find(v => v.name === name) ||
+    const all = getAllVoices(), ko = getKoVoices();
+    return all.find(v => v.name === name) ||
            ko.find(v => v.name.includes('Google')) ||
            ko.find(v => v.name.includes('Natural')) ||
            ko[0] || null;
 }
+
+// 목소리 스타일: 같은 음성 엔진이라도 속도·높낮이를 달리해 여러 느낌의 목소리를 낸다
+const VOICE_STYLES = {
+    standard:  { label: '표준',        desc: '기본 안내 목소리', rate: 0.9,  pitch: 1.0 },
+    announcer: { label: '아나운서',    desc: '또렷하고 차분하게', rate: 0.95, pitch: 0.9 },
+    calm:      { label: '차분하게',    desc: '낮고 느긋하게',   rate: 0.8,  pitch: 0.85 },
+    clear:     { label: '또박또박',    desc: '천천히 정확하게', rate: 0.75, pitch: 1.0 },
+    bright:    { label: '밝게',        desc: '높고 경쾌하게',   rate: 1.0,  pitch: 1.25 },
+    deep:      { label: '굵은 목소리', desc: '낮고 묵직하게',   rate: 0.9,  pitch: 0.6 },
+    fast:      { label: '빠르게',      desc: '빠르게 읽기',     rate: 1.25, pitch: 1.0 },
+    cute:      { label: '귀여운 목소리', desc: '높고 통통 튀게', rate: 1.05, pitch: 1.6 }
+};
+
+// 말하는 도중에 끊기지 않도록: 발화 객체를 붙들어 두고(브라우저가 중간에 수거하는 버그 방지),
+// 이전 음성을 취소한 직후 곧바로 speak() 하지 않고 잠깐 기다린다(일부 크롬에서 첫 발화가 무시되는 문제 방지).
+let activeUtterance = null, speakTimer = null;
 function speak(text, s, onend) {
     if (!ttsSupported) { if (onend) onend(); return; }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    const voice = pickVoice(s.ttsVoice);
-    if (voice) u.voice = voice;
-    u.lang = 'ko-KR';
-    u.rate = s.ttsRate;
-    u.pitch = s.ttsPitch;
-    u.volume = Math.max(0, Math.min(1, s.ttsVolume / 100));
-    if (onend) { u.onend = onend; u.onerror = onend; }
-    window.speechSynthesis.speak(u);
+    const synth = window.speechSynthesis;
+    clearTimeout(speakTimer);
+    if (synth.speaking || synth.pending) synth.cancel();
+    speakTimer = setTimeout(() => {
+        const u = new SpeechSynthesisUtterance(text);
+        const voice = pickVoice(s.ttsVoice);
+        if (voice) u.voice = voice;
+        u.lang = voice ? voice.lang : 'ko-KR';
+        u.rate = s.ttsRate;
+        u.pitch = s.ttsPitch;
+        u.volume = Math.max(0, Math.min(1, s.ttsVolume / 100));
+        const done = () => { if (activeUtterance === u) activeUtterance = null; if (onend) onend(); };
+        u.onend = done;
+        u.onerror = e => { if (e.error === 'canceled' || e.error === 'interrupted') return; done(); };
+        activeUtterance = u;
+        synth.speak(u);
+        if (synth.paused) synth.resume();
+    }, 80);
+}
+function stopSpeaking() {
+    clearTimeout(speakTimer);
+    activeUtterance = null;
+    if (ttsSupported) window.speechSynthesis.cancel();
 }
 if (ttsSupported) window.speechSynthesis.getVoices(); // 일부 브라우저는 첫 호출 때 목록을 비동기로 채움
 

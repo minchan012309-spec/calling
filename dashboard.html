@@ -233,7 +233,11 @@
         <div class="settings-section">
             <h3>🎙️ 음성 안내 (TTS)</h3>
             <div class="vol-row">
-                <label><span>목소리</span></label>
+                <label><span>목소리 스타일</span></label>
+                <div class="preset-row" id="styleRow" style="margin-bottom:0;"></div>
+            </div>
+            <div class="vol-row">
+                <label><span>기기 음성 엔진</span></label>
                 <select id="ttsVoiceSelect" class="settings-input" style="margin:0;"></select>
             </div>
             <div class="vol-row">
@@ -242,11 +246,11 @@
             </div>
             <div class="vol-row">
                 <label><span>말하기 속도</span><span id="ttsRateLabel"></span></label>
-                <input type="range" id="ttsRateSlider" min="0.6" max="1.4" step="0.1">
+                <input type="range" id="ttsRateSlider" min="0.5" max="1.5" step="0.05">
             </div>
             <div class="vol-row">
                 <label><span>목소리 높낮이</span><span id="ttsPitchLabel"></span></label>
-                <input type="range" id="ttsPitchSlider" min="0.5" max="1.5" step="0.1">
+                <input type="range" id="ttsPitchSlider" min="0.5" max="2" step="0.05">
             </div>
             <button class="btn-light" onclick="previewVoice()">▶ 음성 들어보기</button>
             <p class="hint">음성은 기기 최대 볼륨(100%)이 한계라서, 알림음이 음성보다 너무 크면 알림음 볼륨을 낮춰 균형을 맞춰 주세요. 변경 내용은 바로 저장되며 학생용 화면에도 적용됩니다.</p>
@@ -452,7 +456,7 @@
         clearInterval(countdownTimer);
         const d = currentCall;
         currentCall = null;
-        if (ttsSupported) window.speechSynthesis.cancel();
+        stopSpeaking();
         if (d.key) {
             db.ref(`rooms/${ROOM}/calls/${d.key}`).update({ status: statusText, resolvedAt: Date.now() }).catch(err => console.error(err));
         }
@@ -497,13 +501,14 @@
         document.getElementById('adminModal').style.display = 'none';
         document.getElementById('settingsPanel').style.display = 'flex';
         renderPresetRow();
+        renderStyleRow();
         renderVoiceOptions();
         applySettingsToControls();
         renderRoomButtons(document.getElementById('roomSwitchList'), ROOM);
     }
     function closeSettingsPanel() {
         document.getElementById('settingsPanel').style.display = 'none';
-        if (ttsSupported) window.speechSynthesis.cancel();
+        stopSpeaking();
         auth.signOut().catch(() => {});
     }
 
@@ -521,14 +526,15 @@
             ttsVolume: parseInt(ctl.ttsVol().value),
             ttsRate: parseFloat(ctl.rate().value),
             ttsPitch: parseFloat(ctl.pitch().value),
-            ttsVoice: ctl.voice().value
+            ttsVoice: ctl.voice().value,
+            ttsStyle: roomSettings.ttsStyle
         };
     }
     function updateSliderLabels() {
         document.getElementById('alertVolLabel').innerText = ctl.alertVol().value + '%';
         document.getElementById('ttsVolLabel').innerText = ctl.ttsVol().value + '%';
-        document.getElementById('ttsRateLabel').innerText = parseFloat(ctl.rate().value).toFixed(1) + 'x';
-        document.getElementById('ttsPitchLabel').innerText = parseFloat(ctl.pitch().value).toFixed(1);
+        document.getElementById('ttsRateLabel').innerText = parseFloat(ctl.rate().value).toFixed(2) + 'x';
+        document.getElementById('ttsPitchLabel').innerText = parseFloat(ctl.pitch().value).toFixed(2);
     }
     function applySettingsToControls() {
         ctl.alertVol().value = roomSettings.alertVolume;
@@ -565,13 +571,36 @@
             row.appendChild(el);
         });
     }
+    function renderStyleRow() {
+        const row = document.getElementById('styleRow');
+        row.innerHTML = "";
+        Object.entries(VOICE_STYLES).forEach(([key, st]) => {
+            const el = document.createElement('div');
+            el.className = 'preset-choice' + (key === roomSettings.ttsStyle ? ' selected' : '');
+            el.innerHTML = `<div class="p-label">${esc(st.label)}</div><div class="p-desc">${esc(st.desc)}</div>`;
+            el.onclick = () => {
+                ctl.rate().value = st.rate;
+                ctl.pitch().value = st.pitch;
+                updateSliderLabels();
+                roomSettings.ttsStyle = key;
+                const draft = Object.assign(currentDraft(), { ttsStyle: key });
+                saveSettings(draft);
+                renderStyleRow();
+                previewVoice();
+            };
+            row.appendChild(el);
+        });
+    }
     function renderVoiceOptions() {
         const select = ctl.voice();
-        const voices = getKoVoices();
+        const ko = getKoVoices();
+        const others = getAllVoices().filter(v => !ko.includes(v));
+        const opt = v => `<option value="${esc(v.name)}">${esc(v.name)} (${esc(v.lang)})</option>`;
         select.innerHTML = `<option value="">자동 선택 (권장)</option>` +
-            voices.map(v => `<option value="${esc(v.name)}">${esc(v.name)}</option>`).join('');
+            (ko.length ? `<optgroup label="한국어">${ko.map(opt).join('')}</optgroup>` : '') +
+            (others.length ? `<optgroup label="다른 언어 (한국어를 어색하게 읽을 수 있어요)">${others.map(opt).join('')}</optgroup>` : '');
         select.value = roomSettings.ttsVoice;
-        if (!voices.length) select.options[0].text = '이 기기에서 쓸 수 있는 한국어 음성이 없습니다';
+        if (!ko.length) select.options[0].text = '자동 선택 (한국어 음성이 없는 기기예요)';
     }
     if (ttsSupported) window.speechSynthesis.onvoiceschanged = () => {
         if (document.getElementById('settingsPanel').style.display === 'flex') { renderVoiceOptions(); applySettingsToControls(); }
@@ -580,7 +609,7 @@
     [ctl.alertVol, ctl.ttsVol, ctl.rate, ctl.pitch].forEach(getEl => {
         const el = getEl();
         el.addEventListener('input', updateSliderLabels);
-        el.addEventListener('change', () => saveSettings(currentDraft()));
+        el.addEventListener('change', () => { if ([ctl.rate(), ctl.pitch()].includes(el)) { roomSettings.ttsStyle = 'custom'; renderStyleRow(); } saveSettings(currentDraft()); });
     });
     ctl.voice().addEventListener('change', () => { saveSettings(currentDraft()); previewVoice(); });
 
