@@ -213,7 +213,7 @@
                 <input type="range" id="ttsPitchSlider" min="0.5" max="1.5" step="0.1">
             </div>
             <button class="btn-light" onclick="previewVoice()">▶ 음성 들어보기</button>
-            <p class="hint">음성은 기기 최대 볼륨(100%)이 한계라서, 알림음이 더 크게 들리면 알림음 볼륨을 낮춰 균형을 맞춰 주세요. 변경 내용은 바로 저장되며 학생용 화면에도 적용됩니다.</p>
+            <p class="hint">음성은 기기 최대 볼륨(100%)이 한계라서, 알림음이 음성보다 너무 크면 알림음 볼륨을 낮춰 균형을 맞춰 주세요. 변경 내용은 바로 저장되며 학생용 화면에도 적용됩니다.</p>
         </div>
 
         <div class="settings-section">
@@ -366,8 +366,9 @@
         card.classList.add('pop-in');
         updateQueueBadge();
 
-        playAlertTone(roomSettings.soundPreset, roomSettings.alertVolume);
-        setTimeout(() => speak(callSpeech(d), roomSettings), 650);
+        // 알림음이 끝난 뒤에 음성을 읽어 서로 겹치지 않게 한다
+        const toneSec = playAlertTone(roomSettings.soundPreset, roomSettings.alertVolume);
+        setTimeout(() => { if (currentCall === d) speak(callSpeech(d), roomSettings); }, toneSec * 1000 + 200);
 
         recent.unshift(d);
         recent = recent.slice(0, 4);

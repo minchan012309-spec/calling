@@ -280,7 +280,7 @@
             </label>
             <div class="long-press-area disabled" id="longPressBtn">
                 <div class="progress-bar" id="progressBar"></div>
-                <div class="press-btn-text">5초간 꾹 눌러 호출 버튼</div>
+                <div class="press-btn-text">3초간 꾹 눌러 호출 버튼</div>
             </div>
             <div class="page-actions"><button class="ghost-btn" style="flex:1;" onclick="cleanReset()">처음으로</button></div>
         </div>
@@ -1171,7 +1171,8 @@
         setTimeout(() => speak(msg, roomSettings), 500);
     }
 
-    // 5초 길게 누르기
+    // 길게 누르기
+    const HOLD_MS = 3000; // 호출 버튼을 누르고 있어야 하는 시간
     let pressTimer = null, progress = 0;
     const holdBtn = document.getElementById('longPressBtn');
     const bar = document.getElementById('progressBar');
@@ -1190,7 +1191,7 @@
             bar.style.width = progress + "%";
             if (progress >= 100) {
                 clearInterval(pressTimer);
-                // 5초를 끝까지 눌렀을 때만 호출을 전송한다 (짧게 여러 번 톡톡 눌러도 전송되지 않음)
+                // 끝까지 눌렀을 때만 호출을 전송한다 (짧게 여러 번 톡톡 눌러도 전송되지 않음)
                 if (!isSubmitted) {
                     isSubmitted = true;
                     try { executeSubmit(sid); } catch (err) { console.error('제출 처리 오류:', err); }
@@ -1198,7 +1199,7 @@
                 document.getElementById('holdingOverlay').style.display = 'flex';
                 setTimeout(() => { document.getElementById('holdingOverlay').style.display = 'none'; go(4); }, 800);
             }
-        }, 50);
+        }, HOLD_MS / 100);
     }
     function endPress() {
         clearInterval(pressTimer);

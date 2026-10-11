@@ -119,24 +119,27 @@ function showBlockOverlay(st) {
 }
 
 // ===================== 소리 설정 (rooms/{room}/settings) =====================
-const DEFAULT_SETTINGS = { alertVolume: 60, ttsVolume: 100, ttsRate: 0.9, ttsPitch: 1, soundPreset: 'default', ttsVoice: '' };
+const DEFAULT_SETTINGS = { alertVolume: 100, ttsVolume: 100, ttsRate: 0.9, ttsPitch: 1, soundPreset: 'default', ttsVoice: '' };
 function watchRoomSettings(room, onChange) {
     db.ref(`rooms/${room}/settings`).on('value', snap => onChange(Object.assign({}, DEFAULT_SETTINGS, snap.val() || {})));
 }
 
 // 알림음: [주파수, 시작(초), 길이(초), 파형, 세기]
+// 쉬는 시간처럼 시끄러운 곳에서도 들리도록 귀에 잘 띄는 1~3kHz 대역의 사각/톱니파를 쓰고, 2초 안팎으로 반복한다.
+const repeatNotes = (notes, times, interval) =>
+    Array.from({ length: times }, (_, k) => notes.map(([f, t, d, w, v]) => [f, t + k * interval, d, w, v])).flat();
 const ALERT_PRESETS = {
-    default: { label: '기본 벨', desc: '경쾌한 2음', notes: [[1200, 0, 0.6, 'square', 1], [880, 0.22, 0.9, 'square', 1]] },
-    chime:   { label: '띵동 차임', desc: '현관 벨 느낌', notes: [[1319, 0, 0.8, 'sine', 1], [1047, 0.45, 1.2, 'sine', 1]] },
-    soft:    { label: '부드러운 알림', desc: '조용한 사무실용', notes: [[880, 0, 0.5, 'sine', 0.9], [1100, 0.25, 0.7, 'sine', 0.9]] },
-    melody:  { label: '멜로디', desc: '도 · 미 · 솔', notes: [[523, 0, 0.35, 'triangle', 1], [659, 0.28, 0.35, 'triangle', 1], [784, 0.56, 0.7, 'triangle', 1]] },
-    bell:    { label: '종소리', desc: '여운이 긴 종', notes: [[880, 0, 1.8, 'sine', 1], [1320, 0, 1.3, 'sine', 0.45], [2200, 0, 0.8, 'sine', 0.25]] },
-    digital: { label: '디지털 삑삑', desc: '또렷한 4연속음', notes: [0, 1, 2, 3].map(i => [1000, i * 0.2, 0.12, 'square', 1]) },
-    short:   { label: '짧은 알림', desc: '한 번만 삑', notes: [[1300, 0, 0.25, 'square', 1]] },
-    urgent:  { label: '긴급 경보', desc: '빠른 반복음', notes: [0, 1, 2, 3, 4].map(i => [1500, i * 0.18, 0.15, 'square', 1]) }
+    default: { label: '기본 벨', desc: '높낮이 번갈아 3번', notes: repeatNotes([[1568, 0, 0.28, 'square', 1], [1175, 0.3, 0.28, 'square', 1]], 3, 0.7) },
+    ring:    { label: '전화벨', desc: '따르릉 따르릉', notes: repeatNotes(Array.from({ length: 8 }, (_, i) => [i % 2 ? 1300 : 1700, i * 0.07, 0.07, 'square', 1]), 3, 0.75) },
+    chime:   { label: '띵동 차임', desc: '크게 울리는 띵동', notes: repeatNotes([[1976, 0, 0.5, 'square', 0.9], [1568, 0.45, 0.7, 'square', 0.9]], 2, 1.25) },
+    melody:  { label: '멜로디', desc: '도 · 미 · 솔 · 높은 도', notes: repeatNotes([[1047, 0, 0.22, 'sawtooth', 1], [1319, 0.22, 0.22, 'sawtooth', 1], [1568, 0.44, 0.22, 'sawtooth', 1], [2093, 0.66, 0.4, 'sawtooth', 1]], 2, 1.2) },
+    bell:    { label: '종소리', desc: '쨍한 금속 종', notes: repeatNotes([[1760, 0, 0.55, 'square', 1], [2637, 0, 0.4, 'square', 0.6]], 3, 0.7) },
+    digital: { label: '디지털 삑삑', desc: '또렷한 6연속음', notes: repeatNotes([[2200, 0, 0.1, 'square', 1]], 6, 0.18) },
+    short:   { label: '짧은 알림', desc: '삑 삑 삑', notes: repeatNotes([[2000, 0, 0.18, 'square', 1]], 3, 0.3) },
+    urgent:  { label: '긴급 경보', desc: '사이렌처럼 빠른 반복', notes: repeatNotes([[1200, 0, 0.12, 'square', 1], [2400, 0.12, 0.12, 'square', 1]], 8, 0.24) }
 };
-// 사각파는 사인파보다 훨씬 크게 들리므로, 음성(TTS)과 균형이 맞도록 전체 이득을 낮춰 둔다.
-const ALERT_GAIN = 0.3;
+// 알림음이 음성(TTS)에 묻히지 않도록 최대 크기로 낸다. (음성은 브라우저 최대 100%가 한계)
+const ALERT_GAIN = 1.0;
 
 let audioCtx = null;
 function getAudioCtx() {
