@@ -129,7 +129,7 @@ function watchRoomSettings(room, onChange) {
 const repeatNotes = (notes, times, interval) =>
     Array.from({ length: times }, (_, k) => notes.map(([f, t, d, w, v]) => [f, t + k * interval, d, w, v])).flat();
 const ALERT_PRESETS = {
-    default: { label: '기본 벨', desc: '높낮이 번갈아 2번', notes: repeatNotes([[1568, 0, 0.2, 'square', 1], [1175, 0.2, 0.2, 'square', 1]], 2, 0.45) },
+    default: { label: '기본 벨', desc: '종소리 쨍쨍쨍 빠르게 3번', notes: repeatNotes([[1760, 0, 0.2, 'square', 1], [2637, 0, 0.14, 'square', 0.6]], 3, 0.26) },
     ring:    { label: '전화벨', desc: '따르릉 따르릉', notes: repeatNotes(Array.from({ length: 7 }, (_, i) => [i % 2 ? 1300 : 1700, i * 0.07, 0.07, 'square', 1]), 2, 0.52) },
     chime:   { label: '띵동 차임', desc: '크게 울리는 띵동', notes: [[1976, 0, 0.4, 'square', 0.9], [1568, 0.3, 0.6, 'square', 0.9]] },
     melody:  { label: '멜로디', desc: '도 · 미 · 솔 · 높은 도', notes: [[1047, 0, 0.18, 'sawtooth', 1], [1319, 0.18, 0.18, 'sawtooth', 1], [1568, 0.36, 0.18, 'sawtooth', 1], [2093, 0.54, 0.45, 'sawtooth', 1]] },
@@ -223,6 +223,19 @@ function speak(text, s, onend) {
         synth.speak(u);
         if (synth.paused) synth.resume();
     }, 80);
+}
+// 한국어 조사 (으로/로): 받침이 없거나 ㄹ 받침이면 '로'
+function euroParticle(word) {
+    if (!word) return '으로';
+    const code = word[word.length - 1].charCodeAt(0) - 0xAC00;
+    if (code < 0 || code > 11171) return '으로';
+    const jong = code % 28;
+    return (jong === 0 || jong === 8) ? '로' : '으로';
+}
+// 호출 안내 문구 (학생 화면·대시보드 공통): "안성실 선생님, 김민찬 학생이 제출로 호출했습니다."
+function callSpeech(call) {
+    const purpose = String(call.purpose || '').replace(/^기타\((.*)\)$/, '$1');   // "기타(상담 요청)" → "상담 요청"
+    return `${call.teacher} 선생님, ${call.name} 학생이 ${purpose}${euroParticle(purpose)} 호출했습니다.`;
 }
 function stopSpeaking() {
     clearTimeout(speakTimer);

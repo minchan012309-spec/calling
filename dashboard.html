@@ -368,18 +368,6 @@
         toastTimer = setTimeout(() => toast.classList.remove('show'), small ? 1600 : 2500);
     }
 
-    // ===================== 호출 수신 =====================
-    // 한국어 조사 (으로/로)
-    function euroParticle(word) {
-        if (!word) return '으로';
-        const code = word[word.length - 1].charCodeAt(0) - 0xAC00;
-        if (code < 0 || code > 11171) return '으로';
-        const jong = code % 28;
-        return (jong === 0 || jong === 8) ? '로' : '으로';
-    }
-    function callSpeech(d) {
-        return `${d.teacher} 선생님, ${d.name} 학생이 ${d.purpose}${euroParticle(d.purpose)} 호출했습니다.`;
-    }
 
     // 20118 → ["2학년", "1반", "18번"]
     function studentChips(id) {

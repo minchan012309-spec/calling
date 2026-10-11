@@ -1167,8 +1167,7 @@
         const nowTs = submitCall({ teacher: data.t, id, name: data.name, purpose });
         lastHandledAbsentTs = nowTs - 1;
         isAbsentTriggered = false;
-        const msg = `${data.g}학년 ${data.b}반 ${data.n}번 ${data.name} 학생이 ${data.t} 선생님을 호출했습니다. 호출 사유는 ${data.p === '기타' ? data.customP : data.p}입니다.`;
-        setTimeout(() => speak(msg, roomSettings), 500);
+        setTimeout(() => speak(callSpeech({ teacher: data.t, name: data.name, purpose: purpose }), roomSettings), 500);
     }
 
     // 길게 누르기
